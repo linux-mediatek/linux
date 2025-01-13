@@ -14,6 +14,7 @@
 #include <linux/soc/mediatek/mtk-mmsys.h>
 
 #include "mtk-mmsys.h"
+#include "mt6789-mmsys.h"
 #include "mt8167-mmsys.h"
 #include "mt8173-mmsys.h"
 #include "mt8183-mmsys.h"
@@ -39,6 +40,12 @@ static const struct mtk_mmsys_driver_data mt2712_mmsys_driver_data = {
 
 static const struct mtk_mmsys_driver_data mt6779_mmsys_driver_data = {
 	.clk_driver = "clk-mt6779-mm",
+};
+
+static const struct mtk_mmsys_driver_data mt6789_mmsys_driver_data = {
+	.clk_driver = "clk-mt6789-mm",
+	.routes = mmsys_mt6789_routing_table,
+	.num_routes = ARRAY_SIZE(mmsys_mt6789_routing_table),
 };
 
 static const struct mtk_mmsys_driver_data mt6795_mmsys_driver_data = {
@@ -391,6 +398,7 @@ static int mtk_mmsys_probe(struct platform_device *pdev)
 	struct platform_device *drm;
 	struct mtk_mmsys *mmsys;
 	int ret;
+	dev_err(dev, "mmsys probe\n");
 
 	mmsys = devm_kzalloc(dev, sizeof(*mmsys), GFP_KERNEL);
 	if (!mmsys)
@@ -422,22 +430,27 @@ static int mtk_mmsys_probe(struct platform_device *pdev)
 	/* CMDQ is optional */
 	ret = cmdq_dev_get_client_reg(dev, &mmsys->cmdq_base, 0);
 	if (ret)
-		dev_dbg(dev, "No mediatek,gce-client-reg!\n");
+		dev_err(dev, "No mediatek,gce-client-reg!\n");
 
 	platform_set_drvdata(pdev, mmsys);
 
 	clks = platform_device_register_data(&pdev->dev, mmsys->data->clk_driver,
 					     PLATFORM_DEVID_AUTO, NULL, 0);
-	if (IS_ERR(clks))
+	if (IS_ERR(clks)) {
+		dev_err(dev, "mmsys clks err\n");
 		return PTR_ERR(clks);
+	}
 	mmsys->clks_pdev = clks;
 
-	if (mmsys->data->is_vppsys)
+	if (mmsys->data->is_vppsys) {
+		dev_err(dev, "mmsys vppsys\n");
 		goto out_probe_done;
+	}
 
 	drm = platform_device_register_data(&pdev->dev, "mediatek-drm",
 					    PLATFORM_DEVID_AUTO, NULL, 0);
 	if (IS_ERR(drm)) {
+		dev_err(dev, "mmsys failed to register mtk drm data\n");
 		platform_device_unregister(clks);
 		return PTR_ERR(drm);
 	}
@@ -459,6 +472,7 @@ static const struct of_device_id of_match_mtk_mmsys[] = {
 	{ .compatible = "mediatek,mt2701-mmsys", .data = &mt2701_mmsys_driver_data },
 	{ .compatible = "mediatek,mt2712-mmsys", .data = &mt2712_mmsys_driver_data },
 	{ .compatible = "mediatek,mt6779-mmsys", .data = &mt6779_mmsys_driver_data },
+	{ .compatible = "mediatek,mt6789-mmsys", .data = &mt6789_mmsys_driver_data },
 	{ .compatible = "mediatek,mt6795-mmsys", .data = &mt6795_mmsys_driver_data },
 	{ .compatible = "mediatek,mt6797-mmsys", .data = &mt6797_mmsys_driver_data },
 	{ .compatible = "mediatek,mt8167-mmsys", .data = &mt8167_mmsys_driver_data },

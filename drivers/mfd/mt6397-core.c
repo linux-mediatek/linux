@@ -309,6 +309,8 @@ static int mt6397_probe(struct platform_device *pdev)
 	struct mt6397_chip *pmic;
 	const struct chip_data *pmic_core;
 
+	dev_err(&pdev->dev, "probe");
+
 	pmic = devm_kzalloc(&pdev->dev, sizeof(*pmic), GFP_KERNEL);
 	if (!pmic)
 		return -ENOMEM;
@@ -327,6 +329,7 @@ static int mt6397_probe(struct platform_device *pdev)
 	if (!pmic_core)
 		return -ENODEV;
 
+	dev_err(&pdev->dev, "read chip id");
 	ret = regmap_read(pmic->regmap, pmic_core->cid_addr, &id);
 	if (ret) {
 		dev_err(&pdev->dev, "Failed to read chip id: %d\n", ret);
@@ -337,10 +340,12 @@ static int mt6397_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, pmic);
 
+	dev_err(&pdev->dev, "get irq");
 	pmic->irq = platform_get_irq(pdev, 0);
 	if (pmic->irq <= 0)
 		return pmic->irq;
 
+	dev_err(&pdev->dev, "irq init");
 	ret = pmic_core->irq_init(pmic);
 	if (ret)
 		return ret;

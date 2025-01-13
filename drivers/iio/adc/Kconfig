@@ -1647,4 +1647,10 @@ config XILINX_AMS
 	  The driver can also be built as a module. If so, the module will be called
 	  xilinx-ams.
 
+config SOUTHCHIP_SC6601_ADC
+	tristate "SouthChip SC6601 ADC driver"
+	depends on MFD_SC6601
+	help
+	  Say yes here to enable SouthChip SC6601 ADC support.
+
 endmenu

@@ -969,6 +969,8 @@ static int ufs_mtk_init(struct ufs_hba *hba)
 	int err = 0;
 	struct arm_smccc_res res;
 
+	dev_err(dev, "ufs mtk init!\n");
+
 	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
 	if (!host) {
 		err = -ENOMEM;
@@ -1258,9 +1260,12 @@ static int ufs_mtk_device_reset(struct ufs_hba *hba)
 {
 	struct arm_smccc_res res;
 
+	dev_err(hba->dev, "ufs device reset!\n");
+
 	/* disable hba before device reset */
 	ufshcd_hba_stop(hba);
 
+	dev_err(hba->dev, "ufs device reset ctrl 0!\n");
 	ufs_mtk_device_reset_ctrl(0, res);
 
 	/*
@@ -1271,6 +1276,7 @@ static int ufs_mtk_device_reset(struct ufs_hba *hba)
 	 * To be on safe side, keep the reset low for at least 10us.
 	 */
 	usleep_range(10, 15);
+	dev_err(hba->dev, "ufs device reset ctrl 1!\n");
 
 	ufs_mtk_device_reset_ctrl(1, res);
 
@@ -1825,6 +1831,8 @@ static int ufs_mtk_probe(struct platform_device *pdev)
 	struct platform_device *reset_pdev;
 	struct device_link *link;
 
+	dev_err(dev, "ufs mtk probe\n");
+
 	reset_node = of_find_compatible_node(NULL, NULL,
 					     "ti,syscon-reset");
 	if (!reset_node) {
@@ -1851,6 +1859,7 @@ static int ufs_mtk_probe(struct platform_device *pdev)
 
 skip_reset:
 	/* perform generic probe */
+	dev_err(dev, "we're gonna skip reset\n");
 	err = ufshcd_pltfrm_init(pdev, &ufs_hba_mtk_vops);
 
 out:

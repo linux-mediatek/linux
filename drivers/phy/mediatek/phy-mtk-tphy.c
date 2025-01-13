@@ -1420,12 +1420,18 @@ static int mtk_phy_power_on(struct phy *phy)
 	struct mtk_phy_instance *instance = phy_get_drvdata(phy);
 	struct mtk_tphy *tphy = dev_get_drvdata(phy->dev.parent);
 
+	dev_err(tphy->dev, "tphy power on\n");
+
 	if (instance->type == PHY_TYPE_USB2) {
+		dev_err(tphy->dev, "instance power on\n");
 		u2_phy_instance_power_on(tphy, instance);
+		dev_err(tphy->dev, "rate calibrate\n");
 		hs_slew_rate_calibrate(tphy, instance);
 	} else if (instance->type == PHY_TYPE_PCIE) {
 		pcie_phy_instance_power_on(tphy, instance);
 	}
+
+	dev_err(tphy->dev, "tphy power on done\n");
 
 	return 0;
 }
@@ -1583,6 +1589,8 @@ static int mtk_tphy_probe(struct platform_device *pdev)
 	struct resource res;
 	int port;
 
+	dev_err(dev, "I AM PROBING!!!\n");
+
 	tphy = devm_kzalloc(dev, sizeof(*tphy), GFP_KERNEL);
 	if (!tphy)
 		return -ENOMEM;
@@ -1629,6 +1637,8 @@ static int mtk_tphy_probe(struct platform_device *pdev)
 		struct phy *phy;
 		int retval;
 
+		dev_err(dev, "PARSING PORT %d\n", port);
+
 		instance = devm_kzalloc(dev, sizeof(*instance), GFP_KERNEL);
 		if (!instance)
 			return -ENOMEM;
@@ -1650,6 +1660,7 @@ static int mtk_tphy_probe(struct platform_device *pdev)
 		}
 
 		instance->port_base = devm_ioremap_resource(subdev, &res);
+		dev_err(subdev, "PORT_BASE: %p\n", instance->port_base);
 		if (IS_ERR(instance->port_base))
 			return PTR_ERR(instance->port_base);
 

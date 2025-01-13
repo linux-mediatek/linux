@@ -1014,6 +1014,8 @@ int mtk_paris_pinctrl_probe(struct platform_device *pdev)
 	struct mtk_pinctrl *hw;
 	int err, i;
 
+	dev_err(dev, "pinctrl paris probe\n");
+
 	hw = devm_kzalloc(&pdev->dev, sizeof(*hw), GFP_KERNEL);
 	if (!hw)
 		return -ENOMEM;
@@ -1021,8 +1023,10 @@ int mtk_paris_pinctrl_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, hw);
 
 	hw->soc = device_get_match_data(dev);
-	if (!hw->soc)
+	if (!hw->soc) {
+		dev_err(dev, "fail match data\n");
 		return -ENOENT;
+	}
 
 	hw->dev = &pdev->dev;
 
@@ -1049,6 +1053,7 @@ int mtk_paris_pinctrl_probe(struct platform_device *pdev)
 
 	spin_lock_init(&hw->lock);
 
+	dev_err(dev, "build state\n");
 	err = mtk_pctrl_build_state(pdev);
 	if (err)
 		return dev_err_probe(dev, err, "build state failed\n");
@@ -1073,20 +1078,22 @@ int mtk_paris_pinctrl_probe(struct platform_device *pdev)
 	mtk_desc.custom_conf_items = mtk_conf_items;
 #endif
 
+	dev_err(dev, "pinctrl register\n");
 	err = devm_pinctrl_register_and_init(&pdev->dev, &mtk_desc, hw,
 					     &hw->pctrl);
 	if (err)
 		return err;
-
+	dev_err(dev, "pinctrl enable\n");
 	err = pinctrl_enable(hw->pctrl);
 	if (err)
 		return err;
-
+	dev_err(dev, "build eint\n");
 	err = mtk_build_eint(hw, pdev);
 	if (err)
 		dev_warn(&pdev->dev,
 			 "Failed to add EINT, but pinctrl still can work\n");
 
+	dev_err(dev, "build gpiochip\n");
 	/* Build gpiochip should be after pinctrl_enable is done */
 	err = mtk_build_gpiochip(hw);
 	if (err)

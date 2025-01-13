@@ -688,12 +688,16 @@ static int mt6358_regulator_probe(struct platform_device *pdev)
 	const struct mt6358_regulator_info *mt6358_info;
 	int i, max_regulator, ret;
 
+	dev_err(&pdev->dev, "Сhip ID: %d\n", mt6397->chip_id);
+
 	switch (mt6397->chip_id) {
 	case MT6358_CHIP_ID:
+		dev_err(&pdev->dev, "MT6358 detected\n");
 		max_regulator = MT6358_MAX_REGULATOR;
 		mt6358_info = mt6358_regulators;
 		break;
 	case MT6366_CHIP_ID:
+		dev_err(&pdev->dev, "MT6366 detected\n");
 		max_regulator = MT6366_MAX_REGULATOR;
 		mt6358_info = mt6366_regulators;
 		break;
@@ -719,6 +723,8 @@ static int mt6358_regulator_probe(struct platform_device *pdev)
 			return PTR_ERR(rdev);
 		}
 	}
+
+	dev_err(&pdev->dev, "probe done\n");
 
 	return 0;
 }

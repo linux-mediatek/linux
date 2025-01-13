@@ -4833,6 +4833,7 @@ start:
 	/* UniPro link is disabled at this point */
 	ufshcd_set_link_off(hba);
 
+
 	ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
 
 	/* start controller initialization sequence */
@@ -4849,7 +4850,6 @@ start:
 	 * This delay can be changed based on the controller.
 	 */
 	ufshcd_delay_us(hba->vps->hba_enable_delay_us, 100);
-
 	/* wait for the host controller to complete initialization */
 	retry_inner = 50;
 	while (!ufshcd_is_hba_active(hba)) {
@@ -4866,10 +4866,8 @@ start:
 		}
 		usleep_range(1000, 1100);
 	}
-
 	/* enable UIC related interrupts */
 	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
-
 	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
 
 	return 0;
@@ -4880,6 +4878,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
 	int ret;
 
 	if (hba->quirks & UFSHCI_QUIRK_BROKEN_HCE) {
+		dev_err(hba->dev, "broken hce");
 		ufshcd_set_link_off(hba);
 		ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
 
@@ -8838,12 +8837,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
 	unsigned long flags;
 	int ret;
 
+	dev_err(hba->dev, "ufshcd probe\n");
+
 	ret = ufshcd_device_init(hba, init_dev_params);
 	if (ret)
 		goto out;
+	dev_err(hba->dev, "ufshcd device init done\n");
 
 	if (!hba->pm_op_in_progress &&
 	    (hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH)) {
+	    dev_err(hba->dev, "ufshcd reinit\n");
 		/* Reset the device and controller before doing reinit */
 		ufshcd_device_reset(hba);
 		ufs_put_device_desc(hba);
@@ -10386,6 +10389,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 	struct Scsi_Host *host = hba->host;
 	struct device *dev = hba->dev;
 
+	dev_err(hba->dev, "ufshcd init\n");
+
 	/*
 	 * dev_set_drvdata() must be called before any callbacks are registered
 	 * that use dev_get_drvdata() (frequency scaling, clock scaling, hwmon,
@@ -10541,9 +10546,11 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 
 	/* Reset the attached device */
 	ufshcd_device_reset(hba);
+	dev_err(hba->dev, "ufshcd init crepto\n");
 
 	ufshcd_init_crypto(hba);
 
+	dev_err(hba->dev, "ufshcd probe hba enable\n");
 	/* Host controller enable */
 	err = ufshcd_hba_enable(hba);
 	if (err) {
@@ -10583,11 +10590,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 	 * This assumption helps avoid doing link startup twice during
 	 * ufshcd_probe_hba().
 	 */
+	 dev_err(hba->dev, "ufshcd set dev active\n");
 	ufshcd_set_ufs_dev_active(hba);
 
 	async_schedule(ufshcd_async_scan, hba);
 	ufs_sysfs_add_nodes(hba->dev);
-
+	dev_err(hba->dev, "ufshcd enable async suspend\n");
 	device_enable_async_suspend(dev);
 	ufshcd_pm_qos_init(hba);
 	return 0;

@@ -19,8 +19,11 @@
 #include <linux/regulator/consumer.h>
 
 #define RT1711H_VID		0x29CF
+#define SC6601_VID		0x311C
 #define RT1711H_PID		0x1711
+#define SC6601_PID		0x6600
 #define RT1711H_DID		0x2171
+#define SC6601_DID		0x0001
 #define RT1715_DID		0x2173
 
 #define RT1711H_PHYCTRL1	0x80
@@ -267,6 +270,8 @@ static irqreturn_t rt1711h_irq(int irq, void *dev_id)
 	u8 status;
 	struct rt1711h_chip *chip = dev_id;
 
+	dev_err(chip->dev, "tcpc irq!\n");
+
 	if (!chip->tcpci)
 		return IRQ_HANDLED;
 
@@ -308,14 +313,14 @@ static int rt1711h_check_revision(struct i2c_client *i2c, struct rt1711h_chip *c
 	ret = i2c_smbus_read_word_data(i2c, TCPC_VENDOR_ID);
 	if (ret < 0)
 		return ret;
-	if (ret != RT1711H_VID) {
+	if (ret != RT1711H_VID && ret != SC6601_VID) {
 		dev_err(&i2c->dev, "vid is not correct, 0x%04x\n", ret);
 		return -ENODEV;
 	}
 	ret = i2c_smbus_read_word_data(i2c, TCPC_PRODUCT_ID);
 	if (ret < 0)
 		return ret;
-	if (ret != RT1711H_PID) {
+	if (ret != RT1711H_PID && ret != SC6601_PID) {
 		dev_err(&i2c->dev, "pid is not correct, 0x%04x\n", ret);
 		return -ENODEV;
 	}
@@ -329,6 +334,10 @@ static int rt1711h_check_revision(struct i2c_client *i2c, struct rt1711h_chip *c
 	dev_dbg(&i2c->dev, "did is 0x%04x\n", ret);
 	return ret;
 }
+
+
+#define RT1711H_REG_RT_MASK					(0x99)
+#define RT1711H_REG_RT_INT					(0x98)
 
 static int rt1711h_probe(struct i2c_client *client)
 {
@@ -363,6 +372,9 @@ static int rt1711h_probe(struct i2c_client *client)
 	ret = rt1711h_write16(chip, TCPC_ALERT_MASK, 0);
 	if (ret < 0)
 		return ret;
+	//sc6601 patch
+	rt1711h_write16(chip, RT1711H_REG_RT_MASK, 0);
+	rt1711h_write16(chip, RT1711H_REG_RT_INT, 0xff);
 
 	chip->vbus = devm_regulator_get(&client->dev, "vbus");
 	if (IS_ERR(chip->vbus))
@@ -398,6 +410,10 @@ static const struct rt1711h_chip_info rt1711h = {
 	.did = RT1711H_DID,
 };
 
+static const struct rt1711h_chip_info sc6601 = {
+	.did = SC6601_DID,
+};
+
 static const struct rt1711h_chip_info rt1715 = {
 	.rxdz_sel = RT1711H_BMCIO_RXDZSEL,
 	.did = RT1715_DID,
@@ -414,6 +430,7 @@ MODULE_DEVICE_TABLE(i2c, rt1711h_id);
 static const struct of_device_id rt1711h_of_match[] = {
 	{ .compatible = "richtek,rt1711h", .data = &rt1711h },
 	{ .compatible = "richtek,rt1715", .data = &rt1715 },
+	{ .compatible = "southchip,sc6601-tcpc", .data = &sc6601 },
 	{}
 };
 MODULE_DEVICE_TABLE(of, rt1711h_of_match);

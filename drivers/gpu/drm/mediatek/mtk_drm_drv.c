@@ -71,6 +71,14 @@ static const unsigned int mt2701_mtk_ddp_ext[] = {
 	DDP_COMPONENT_DPI0,
 };
 
+static const unsigned int mt6789_mtk_ddp_main[] = {
+	DDP_COMPONENT_OVL0,
+	DDP_COMPONENT_RDMA0,
+	DDP_COMPONENT_DITHER0,
+	DDP_COMPONENT_DSC0,
+	DDP_COMPONENT_DSI0,
+};
+
 static const unsigned int mt7623_mtk_ddp_main[] = {
 	DDP_COMPONENT_OVL0,
 	DDP_COMPONENT_RDMA0,
@@ -239,6 +247,12 @@ static const struct mtk_mmsys_driver_data mt2701_mmsys_driver_data = {
 	.mmsys_dev_num = 1,
 };
 
+static const struct mtk_mmsys_driver_data mt6789_mmsys_driver_data = {
+	.main_path = mt6789_mtk_ddp_main,
+	.main_len = ARRAY_SIZE(mt6789_mtk_ddp_main),
+	.mmsys_dev_num = 1,
+};
+
 static const struct mtk_mmsys_driver_data mt7623_mmsys_driver_data = {
 	.main_path = mt7623_mtk_ddp_main,
 	.main_len = ARRAY_SIZE(mt7623_mtk_ddp_main),
@@ -329,6 +343,8 @@ static const struct mtk_mmsys_driver_data mt8195_vdosys1_driver_data = {
 static const struct of_device_id mtk_drm_of_ids[] = {
 	{ .compatible = "mediatek,mt2701-mmsys",
 	  .data = &mt2701_mmsys_driver_data},
+	{ .compatible = "mediatek,mt6789-mmsys",
+	  .data = &mt6789_mmsys_driver_data},
 	{ .compatible = "mediatek,mt7623-mmsys",
 	  .data = &mt7623_mmsys_driver_data},
 	{ .compatible = "mediatek,mt2712-mmsys",
@@ -359,8 +375,12 @@ MODULE_DEVICE_TABLE(of, mtk_drm_of_ids);
 
 static int mtk_drm_match(struct device *dev, void *data)
 {
-	if (!strncmp(dev_name(dev), "mediatek-drm", sizeof("mediatek-drm") - 1))
+	dev_err(dev, "mediatek drm match\n");
+	if (!strncmp(dev_name(dev), "mediatek-drm", sizeof("mediatek-drm") - 1)) {
+		dev_err(dev, "mediatek drm match true\n");
 		return true;
+	}
+	dev_err(dev, "mediatek drm match false\n");
 	return false;
 }
 
@@ -455,14 +475,16 @@ static int mtk_drm_kms_init(struct drm_device *drm)
 	struct device *dma_dev = NULL;
 	struct drm_crtc *crtc;
 	int ret, i, j;
+	dev_err(drm->dev, "mtk drm kms init yay\n");
 
 	if (drm_firmware_drivers_only())
 		return -ENODEV;
 
 	ret = drmm_mode_config_init(drm);
-	if (ret)
+	if (ret) {
+		dev_err(drm->dev, "drmm mode config init fail\n");
 		goto put_mutex_dev;
-
+	}
 	drm->mode_config.min_width = 64;
 	drm->mode_config.min_height = 64;
 
@@ -479,8 +501,10 @@ static int mtk_drm_kms_init(struct drm_device *drm)
 	for (i = 0; i < private->data->mmsys_dev_num; i++) {
 		drm->dev_private = private->all_drm_private[i];
 		ret = component_bind_all(private->all_drm_private[i]->dev, drm);
-		if (ret)
+		if (ret) {
+			dev_err(drm->dev, "fail to bind some component\n");
 			goto put_mutex_dev;
+		}
 	}
 
 	/*
@@ -630,6 +654,8 @@ static int mtk_drm_bind(struct device *dev)
 	struct drm_device *drm;
 	int ret, i;
 
+	dev_err(dev, "yay mtk drm bind\n");
+
 	pdev = of_find_device_by_node(private->mutex_node);
 	if (!pdev) {
 		dev_err(dev, "Waiting for disp-mutex device %pOF\n",
@@ -642,8 +668,10 @@ static int mtk_drm_bind(struct device *dev)
 	private->mtk_drm_bound = true;
 	private->dev = dev;
 
-	if (!mtk_drm_get_all_drm_priv(dev))
+	if (!mtk_drm_get_all_drm_priv(dev)) {
+		dev_err(dev, "drm priv get fail\n");
 		return 0;
+	}
 
 	drm = drm_dev_alloc(&mtk_drm_driver, dev);
 	if (IS_ERR(drm))
@@ -655,9 +683,11 @@ static int mtk_drm_bind(struct device *dev)
 		private->all_drm_private[i]->drm = drm;
 
 	ret = mtk_drm_kms_init(drm);
-	if (ret < 0)
+	if (ret < 0) {
+		dev_err(dev, "drm kms init fail\n");
 		goto err_free;
-
+	};
+	dev_err(dev, "drm dev reg\n");
 	ret = drm_dev_register(drm, 0);
 	if (ret < 0)
 		goto err_deinit;
@@ -715,10 +745,14 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	  .data = (void *)MTK_DISP_COLOR },
 	{ .compatible = "mediatek,mt8173-disp-color",
 	  .data = (void *)MTK_DISP_COLOR },
+	{ .compatible = "mediatek,mt6789-disp-dither",
+	  .data = (void *)MTK_DISP_DITHER },
 	{ .compatible = "mediatek,mt8167-disp-dither",
 	  .data = (void *)MTK_DISP_DITHER },
 	{ .compatible = "mediatek,mt8183-disp-dither",
 	  .data = (void *)MTK_DISP_DITHER },
+	{ .compatible = "mediatek,mt6789-disp-dsc",
+	  .data = (void *)MTK_DISP_DSC },
 	{ .compatible = "mediatek,mt8195-disp-dsc",
 	  .data = (void *)MTK_DISP_DSC },
 	{ .compatible = "mediatek,mt8167-disp-gamma",
@@ -734,6 +768,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	{ .compatible = "mediatek,mt2701-disp-mutex",
 	  .data = (void *)MTK_DISP_MUTEX },
 	{ .compatible = "mediatek,mt2712-disp-mutex",
+	  .data = (void *)MTK_DISP_MUTEX },
+	{ .compatible = "mediatek,mt6789-disp-mutex",
 	  .data = (void *)MTK_DISP_MUTEX },
 	{ .compatible = "mediatek,mt8167-disp-mutex",
 	  .data = (void *)MTK_DISP_MUTEX },
@@ -754,6 +790,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	{ .compatible = "mediatek,mt2701-disp-ovl",
 	  .data = (void *)MTK_DISP_OVL },
 	{ .compatible = "mediatek,mt8167-disp-ovl",
+	  .data = (void *)MTK_DISP_OVL },
+	{ .compatible = "mediatek,mt6789-disp-ovl",
 	  .data = (void *)MTK_DISP_OVL },
 	{ .compatible = "mediatek,mt8173-disp-ovl",
 	  .data = (void *)MTK_DISP_OVL },
@@ -776,6 +814,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	{ .compatible = "mediatek,mt8173-disp-pwm",
 	  .data = (void *)MTK_DISP_PWM },
 	{ .compatible = "mediatek,mt2701-disp-rdma",
+	  .data = (void *)MTK_DISP_RDMA },
+	{ .compatible = "mediatek,mt6789-disp-rdma",
 	  .data = (void *)MTK_DISP_RDMA },
 	{ .compatible = "mediatek,mt8167-disp-rdma",
 	  .data = (void *)MTK_DISP_RDMA },
@@ -807,6 +847,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	  .data = (void *)MTK_DP_INTF },
 	{ .compatible = "mediatek,mt2701-dsi",
 	  .data = (void *)MTK_DSI },
+	{ .compatible = "mediatek,mt6789-dsi",
+	  .data = (void *)MTK_DSI },
 	{ .compatible = "mediatek,mt8173-dsi",
 	  .data = (void *)MTK_DSI },
 	{ .compatible = "mediatek,mt8183-dsi",
@@ -830,6 +872,8 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	int ret;
 	int i;
 
+	dev_err(dev, "mtk drm probe");
+
 	private = devm_kzalloc(dev, sizeof(*private), GFP_KERNEL);
 	if (!private)
 		return -ENOMEM;
@@ -839,6 +883,8 @@ static int mtk_drm_probe(struct platform_device *pdev)
 		dev_err(dev, "Failed to get MMSYS device\n");
 		return -ENODEV;
 	}
+
+	dev_err(dev, "gonna get mmsys");
 
 	of_id = of_match_node(mtk_drm_of_ids, phandle);
 	if (!of_id)
@@ -865,6 +911,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	}
 
 	/* Iterate over sibling DISP function blocks */
+	dev_err(dev, "gonna iterate nodes");
 	for_each_child_of_node(phandle->parent, node) {
 		const struct of_device_id *of_id;
 		enum mtk_ddp_comp_type comp_type;
@@ -875,7 +922,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 			continue;
 
 		if (!of_device_is_available(node)) {
-			dev_dbg(dev, "Skipping disabled component %pOF\n",
+			dev_err(dev, "Skipping disabled component %pOF\n",
 				node);
 			continue;
 		}
@@ -888,7 +935,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 			id = of_alias_get_id(node, "mutex");
 			if (id < 0 || id == private->data->mmsys_id) {
 				private->mutex_node = of_node_get(node);
-				dev_dbg(dev, "get mutex for mmsys %d", private->data->mmsys_id);
+				dev_err(dev, "get mutex for mmsys %d", private->data->mmsys_id);
 			}
 			continue;
 		}
@@ -930,6 +977,8 @@ static int mtk_drm_probe(struct platform_device *pdev)
 
 		ret = mtk_ddp_comp_init(node, &private->ddp_comp[comp_id], comp_id);
 		if (ret) {
+			dev_err(dev, "Failed to init comp %pOF\n",
+							 node);
 			of_node_put(node);
 			goto err_node;
 		}
@@ -944,10 +993,13 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	pm_runtime_enable(dev);
 
 	platform_set_drvdata(pdev, private);
-
+	
+	dev_err(dev, "Component master add with match\n");
 	ret = component_master_add_with_match(dev, &mtk_drm_ops, match);
-	if (ret)
+	if (ret) {
+		dev_err(dev, "Fail\n");
 		goto err_pm;
+	}
 
 	return 0;
 

@@ -5306,6 +5306,40 @@ static const struct panel_desc_dsi osd101t2045_53ts = {
 	.lanes = 4,
 };
 
+/* Reverse engineered timings for panel-n6-42-0d-0a */
+/* FIXME: These clocks are not adjusted for DSC */
+static const struct drm_display_mode xiaomi_emerald_mode_120Hz = {
+	.clock = (1080 + 116 + 8 + 16) * (2400 + 20 + 4 + 8) * 120 / 1000,
+	.hdisplay = 1080,
+	.hsync_start = 1080 + 116,
+	.hsync_end = 1080 + 116 + 8,
+	.htotal = 1080 + 116 + 8 + 16,
+	.vdisplay = 2400,
+	.vsync_start = 2400 + 20,
+	.vsync_end = 2400 + 20 + 4,
+	.vtotal = 2400 + 20 + 4 + 8
+};
+static const struct panel_desc_dsi xiaomi_emerald = {
+	.desc = {
+		.modes = &xiaomi_emerald_mode_120Hz,
+		.num_modes = 1,
+		.bpc = 8,
+		.size = {
+			/* Wrong */
+			.width = 68,
+			.height = 136,
+		},
+		.connector_type = DRM_MODE_CONNECTOR_DSI,
+	},
+	/* IDK, to be checked */
+	.flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
+		 MIPI_DSI_MODE_VIDEO_SYNC_PULSE |
+		 MIPI_DSI_MODE_NO_EOT_PACKET,
+	/* May be RGB101010 */
+	.format = MIPI_DSI_FMT_RGB888,
+	.lanes = 4,
+};
+
 static const struct of_device_id dsi_of_match[] = {
 	{
 		.compatible = "auo,b080uan01",
@@ -5328,6 +5362,9 @@ static const struct of_device_id dsi_of_match[] = {
 	}, {
 		.compatible = "osddisplays,osd101t2045-53ts",
 		.data = &osd101t2045_53ts
+	}, {
+		.compatible = "xiaomi,emerald",
+		.data = &xiaomi_emerald
 	}, {
 		/* sentinel */
 	}

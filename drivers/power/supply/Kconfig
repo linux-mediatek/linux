@@ -636,6 +636,13 @@ config CHARGER_MT6370
 	  This driver can also be built as a module. If so, the module
 	  will be called "mt6370-charger".
 
+config CHARGER_SC6601
+	tristate "SouthChip SC6601 Charger Driver"
+	depends on MFD_SC6601
+	depends on REGULATOR
+	help
+	  Say Y here to enable SC6601 Charger Part.
+
 config CHARGER_QCOM_SMBB
 	tristate "Qualcomm Switch-Mode Battery Charger and Boost"
 	depends on MFD_SPMI_PMIC || COMPILE_TEST
@@ -736,6 +743,15 @@ config CHARGER_BQ25980
 	help
 	  Say Y to enable support for the TI BQ25980, BQ25975 and BQ25960
 	  series of fast battery chargers.
+
+config CHARGER_SC8541
+	tristate "Southchip SC8541 charger support"
+	depends on I2C
+	help
+	  Say Y here to enable support for Southchip SC8541 charger.
+	  Southchip SC8541 is a CP charger, and can support
+	  the battery with up to 8A charging current.
+	  Say N to disable.
 
 config CHARGER_BQ256XX
 	tristate "TI BQ256XX battery charger driver"
@@ -1017,5 +1033,4 @@ config FUEL_GAUGE_MM8013
 	  It enables the monitoring of many battery parameters, including
 	  the state of charge, temperature, cycle count, actual and design
 	  capacity, etc.
-
 endif # POWER_SUPPLY

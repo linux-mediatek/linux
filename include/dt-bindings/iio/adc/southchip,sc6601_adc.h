@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause */
+
+#ifndef __DT_BINDINGS_SOUTHCHIP_SC6601_ADC_H__
+#define __DT_BINDINGS_SOUTHCHIP_SC6601_ADC_H__
+
+/* ADC Channel Index */
+#define SC6601_ADC_CHAN_VAC		0
+#define SC6601_ADC_CHAN_VBAT	1
+#define SC6601_ADC_CHAN_VSYS	2
+#define SC6601_ADC_CHAN_VBUS	3
+#define SC6601_ADC_CHAN_IBAT	4
+#define SC6601_ADC_CHAN_IBUS	5
+#define SC6601_ADC_CHAN_MAX		6
+
+#endif // __DT_BINDINGS_SOUTHCHIP_SC6601_ADC_H__

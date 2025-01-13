@@ -1018,6 +1018,14 @@ config MFD_MT6397
 	  accessing the device; additional drivers must be enabled in order
 	  to use the functionality of the device.
 
+config MFD_SC6601
+	tristate "SouthChip SubPMIC"
+	select MFD_CORE
+	select REGMAP_I2C
+	depends on I2C
+	help
+	  Say yes here to add support for SouthChip SC6601 PMIC.
+
 config MFD_MENF21BMC
 	tristate "MEN 14F021P00 Board Management Controller Support"
 	depends on I2C

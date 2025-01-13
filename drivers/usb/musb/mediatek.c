@@ -258,6 +258,8 @@ static int mtk_musb_init(struct musb *musb)
 	struct mtk_glue *glue = dev_get_drvdata(dev->parent);
 	int ret;
 
+	dev_err(dev, "musb init!\n");
+
 	glue->musb = musb;
 	musb->phy = glue->phy;
 	musb->xceiv = glue->xceiv;
@@ -268,21 +270,26 @@ static int mtk_musb_init(struct musb *musb)
 	musb_writew(musb->mregs, MUSB_TXTOGEN, MTK_TOGGLE_EN);
 	musb_writew(musb->mregs, MUSB_RXTOGEN, MTK_TOGGLE_EN);
 
+	dev_err(dev, "rx/tx toggle!\n");
+
 	if (musb->port_mode == MUSB_OTG) {
 		ret = mtk_otg_switch_init(glue);
 		if (ret)
 			return ret;
 	}
-
 	ret = phy_init(glue->phy);
 	if (ret)
 		goto err_phy_init;
+	dev_err(dev, "phy init done!\n");
 
 	ret = phy_power_on(glue->phy);
 	if (ret)
 		goto err_phy_power_on;
+	dev_err(dev, "phy power on done!\n");
 
 	phy_set_mode(glue->phy, glue->phy_mode);
+
+	dev_err(dev, "phy set mode!\n");
 
 #if defined(CONFIG_USB_INVENTRA_DMA)
 	musb_writel(musb->mregs, MUSB_HSDMA_INTR,
@@ -293,8 +300,10 @@ static int mtk_musb_init(struct musb *musb)
 	return 0;
 
 err_phy_power_on:
+	dev_err(dev, "err phy power on!\n");
 	phy_exit(glue->phy);
 err_phy_init:
+	dev_err(dev, "err phy init!\n");
 	if (musb->port_mode == MUSB_OTG)
 		mtk_otg_switch_exit(glue);
 	return ret;
@@ -406,6 +415,8 @@ static int mtk_musb_probe(struct platform_device *pdev)
 	struct device_node *np = dev->of_node;
 	int ret;
 
+	dev_err(dev, "musb probe!\n");
+
 	glue = devm_kzalloc(dev, sizeof(*glue), GFP_KERNEL);
 	if (!glue)
 		return -ENOMEM;
@@ -491,6 +502,8 @@ static int mtk_musb_probe(struct platform_device *pdev)
 		dev_err(dev, "failed to register musb device: %d\n", ret);
 		goto err_device_register;
 	}
+
+	dev_err(dev, "musb probe done!\n");
 
 	return 0;
 
