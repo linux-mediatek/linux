@@ -681,7 +681,6 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges = <0 0 0x11f40000 0x1000>;
-			status = "okay";
 
 			u2port0: usb-phy@0 {
 				reg = <0x0 0x700>;
@@ -692,7 +691,6 @@
 				mediatek,eye-vrt = <4>;
 				mediatek,eye-term = <4>;
 				mediatek,discth = <7>;
-				status = "okay";
 			};
 		};
 

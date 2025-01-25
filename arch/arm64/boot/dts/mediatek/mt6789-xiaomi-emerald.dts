@@ -12,7 +12,6 @@
 #include <dt-bindings/usb/pd.h>
 #include <dt-bindings/regulator/mediatek,mt6397-regulator.h>
 #include <dt-bindings/pinctrl/mediatek,mt6789-pinfunc.h>
-#include <dt-bindings/iio/adc/southchip,sc6601_adc.h>
 
 #include "mt6789.dtsi"
 
@@ -38,7 +37,7 @@
 			stride = <((1080 + 8) * 4)>;
 			format = "a8r8g8b8";
 		};
-    };
+	};
 
 	gpio-keys {
 		compatible = "gpio-keys";
@@ -66,12 +65,9 @@
 
 		constant-charge-current-max-microamp = <16000000>;
 		constant-charge-voltage-max-microvolt = <4740000>;
-
-		precharge-current-microamp = <250000>;
-    };
+	};
 };
 
-/* FIXME: cpufreq-hw can't get cpu-supply for some reason */
 &cpu0 {
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
@@ -683,8 +679,6 @@
 				regulator-min-microvolt = <2900000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-enable-ramp-delay = <60>;
-				// UFS FIXME
-				regulator-always-on;
 			};
 
 			mt6366_vio28_reg: vio28 {

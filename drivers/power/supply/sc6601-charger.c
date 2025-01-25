@@ -17,6 +17,74 @@
 #include <linux/regulator/driver.h>
 #include <linux/workqueue.h>
 
+#define SC6601_REG_VAC_VBUS_OVP		0x04
+#define SC6601_REG_HK_CTRL			0x07
+#define SC6601_REG_HK_CTRL1			0x08
+#define SC6601_REG_HK_INT_STAT		0x09
+#define SC6601_REG_HK_INT_FLG		0x0a
+#define SC6601_REG_HK_INT_MASK		0x0b
+#define SC6601_REG_HK_FLT_STAT		0x0c
+#define SC6601_REG_HK_FLT_FLG		0x0d
+#define SC6601_REG_HK_FLT_MASK		0x0e
+#define	SC6601_REG_HK_ADC_CTRL		0x0f
+#define SC6601_REG_HK_ADC			0x11
+#define SC6601_REG_VSYS_MIN			0x30
+#define SC6601_REG_VBAT				0x31
+#define SC6601_REG_ICHG_CC			0x32
+#define SC6601_REG_ICO_CTRL			0x35
+#define SC6601_REG_RECHARGE_CTRL	0x38
+#define SC6601_REG_VBOOST_CTRL		0x39
+#define SC6601_REG_PROTECTION_DIS	0x3a
+#define SC6601_REG_RESET_CTRL		0x3b
+#define SC6601_REG_CHG_CTRL			0x3c
+#define SC6601_REG_CHG_CTRL1		0x3d
+#define SC6601_REG_CHG_CTRL4		0x40
+#define SC6601_REG_CHG_INT_STAT		0x41
+#define SC6601_REG_CHG_INT_STAT1	0x42
+#define SC6601_REG_CHG_INT_FLG		0x44
+#define SC6601_REG_CHG_INT_MASK		0x47
+#define SC6601_REG_CHG_FLT_STAT		0x50
+#define SC6601_REG_CHG_FLT_FLG		0x52
+#define SC6601_REG_CHG_FLT_MASK		0x54
+#define SC6601_REG_JEITA_TEMP		0x56
+#define SC6601_REG_DPDM_EN			0x90
+#define SC6601_REG_DPDM_CTRL		0x91
+#define SC6601_REG_DPDM_QC_CTRL		0x92
+#define SC6601_REG_DPDM_TFCP_CTRL	0x93
+#define SC6601_REG_DPDM_INT_FLAG	0x94
+#define SC6601_REG_DPDM_INT_MASK	0x95
+#define SC6601_REG_QC3_INT_FLAG		0x96
+#define SC6601_REG_QC3_INT_MASK		0x97
+#define SC6601_REG_DP_STAT			0x98
+#define SC6601_REG_DM_STAT			0x99
+#define Sc6601_REG_DPDM_INTERNAL	0x9a
+#define SC6601_REG_DPDM_CTRL2		0x9d
+#define SC6601_REG_DPDM_NONSTD_STAT	0x9e
+
+#define SC6601_OTG_VBOOST_MIN	3900000
+#define SC6601_OTG_VBOOST_MAX	5800000
+#define SC6601_OTG_VBOOST_STEP	100
+#define SC6601_OTG_IBOOST_MIN	500000
+#define SC6601_OTG_IBOOST_MAX	3250000
+
+#define SC6601_ADC_CHAN_IBUS	0
+#define SC6601_ADC_CHAN_VBUS	1
+#define SC6601_ADC_CHAN_VBAT	3
+#define SC6601_ADC_CHAN_IBAT	5
+
+#define SC6601_BUCK_VBAT_OFFSET	3840
+#define SC6601_BUCK_VBAT_STEP	8
+#define SC6601_BUCK_ICHG_STEP	50
+#define SC6601_BUCK_ICHG_MAX	3600
+
+static const int sc6601_boost_curr_range[] = {
+	500000, 900000, 1300000, 1500000, 2100000, 2500000, 2900000, 3250000,
+};
+
+static const int sc6601_wd_range[] = {
+	0, 500, 1000, 2000, 20000, 40000, 80000, 160000,
+};
+
 enum sc6601_chg_reg_field {
 	F_VAC_OVP,
 	F_VBUS_OVP,
@@ -68,28 +136,15 @@ enum sc6601_irq {
 struct sc6601_priv {
 	struct device *dev;
 	struct iio_channel *iio_adcs;
-	struct mutex attach_lock;
 	struct power_supply *psy;
 	struct regmap *regmap;
 	struct regmap_field *rmap_fields[F_MAX];
 	struct regulator_dev *rdev;
 	struct workqueue_struct *wq;
-	struct work_struct bc12_work;
 	unsigned int irq[SC6601_IRQ_MAX];
 
 	bool online;
 };
-
-/*
-enum mt6370_usb_status {
-	MT6370_USB_STAT_NO_VBUS = 0,
-	MT6370_USB_STAT_VBUS_FLOW_IS_UNDER_GOING,
-	MT6370_USB_STAT_SDP,
-	MT6370_USB_STAT_SDP_NSTD,
-	MT6370_USB_STAT_DCP,
-	MT6370_USB_STAT_CDP,
-	MT6370_USB_STAT_MAX
-};*/
 
 struct sc6601_chg_field {
 	const char *name;
@@ -97,86 +152,12 @@ struct sc6601_chg_field {
 	struct reg_field field;
 };
 
-/*
-enum {
-	MT6370_RANGE_F_IAICR = 0,
-	MT6370_RANGE_F_VOREG,
-	MT6370_RANGE_F_VMIVR,
-	MT6370_RANGE_F_ICHG,
-	MT6370_RANGE_F_IPREC,
-	MT6370_RANGE_F_IEOC,
-	MT6370_RANGE_F_MAX
-};
-
-static const struct linear_range mt6370_chg_ranges[MT6370_RANGE_F_MAX] = {
-	LINEAR_RANGE_IDX(MT6370_RANGE_F_IAICR, 100000, 0x0, 0x3F, 50000),
-	LINEAR_RANGE_IDX(MT6370_RANGE_F_VOREG, 3900000, 0x0, 0x51, 10000),
-	LINEAR_RANGE_IDX(MT6370_RANGE_F_VMIVR, 3900000, 0x0, 0x5F, 100000),
-	LINEAR_RANGE_IDX(MT6370_RANGE_F_ICHG, 900000, 0x08, 0x31, 100000),
-	LINEAR_RANGE_IDX(MT6370_RANGE_F_IPREC, 100000, 0x0, 0x0F, 50000),
-	LINEAR_RANGE_IDX(MT6370_RANGE_F_IEOC, 100000, 0x0, 0x0F, 50000),
-};*/
-
 #define SC6601_CHG_FIELD(_fd, _reg, _lsb, _msb)				\
 [_fd] = {								\
 	.name = #_fd,							\
 	.range = NULL,							\
 	.field = REG_FIELD(_reg, _lsb, _msb),				\
 }
-
-/*
-#define SC6601_CHG_FIELD_RANGE(_fd, _reg, _lsb, _msb)			\
-[_fd] = {								\
-	.name = #_fd,							\
-	.range = &mt6370_chg_ranges[MT6370_RANGE_##_fd],		\
-	.field = REG_FIELD(_reg, _lsb, _msb),				\
-}
-*/
-
-
-#define SC6601_REG_VAC_VBUS_OVP		0x04
-#define SC6601_REG_HK_CTRL			0x07
-#define SC6601_REG_HK_CTRL1			0x08
-#define SC6601_REG_HK_INT_STAT		0x09
-#define SC6601_REG_HK_INT_FLG		0x0a
-#define SC6601_REG_HK_INT_MASK		0x0b
-#define SC6601_REG_HK_FLT_STAT		0x0c
-#define SC6601_REG_HK_FLT_FLG		0x0d
-#define SC6601_REG_HK_FLT_MASK		0x0e
-#define	SC6601_REG_HK_ADC_CTRL		0x0f
-#define SC6601_REG_HK_ADC			0x11
-#define SC6601_REG_VSYS_MIN			0x30
-#define SC6601_REG_VBAT				0x31
-#define SC6601_REG_ICHG_CC			0x32
-#define SC6601_REG_ICO_CTRL			0x35
-#define SC6601_REG_RECHARGE_CTRL	0x38
-#define SC6601_REG_VBOOST_CTRL		0x39
-#define SC6601_REG_PROTECTION_DIS	0x3a
-#define SC6601_REG_RESET_CTRL		0x3b
-#define SC6601_REG_CHG_CTRL			0x3c
-#define SC6601_REG_CHG_CTRL1		0x3d
-#define SC6601_REG_CHG_CTRL4		0x40
-#define SC6601_REG_CHG_INT_STAT		0x41
-#define SC6601_REG_CHG_INT_STAT1	0x42
-#define SC6601_REG_CHG_INT_FLG		0x44
-#define SC6601_REG_CHG_INT_MASK		0x47
-#define SC6601_REG_CHG_FLT_STAT		0x50
-#define SC6601_REG_CHG_FLT_FLG		0x52
-#define SC6601_REG_CHG_FLT_MASK		0x54
-#define SC6601_REG_JEITA_TEMP		0x56
-#define SC6601_REG_DPDM_EN			0x90
-#define SC6601_REG_DPDM_CTRL		0x91
-#define SC6601_REG_DPDM_QC_CTRL		0x92
-#define SC6601_REG_DPDM_TFCP_CTRL	0x93
-#define SC6601_REG_DPDM_INT_FLAG	0x94
-#define SC6601_REG_DPDM_INT_MASK	0x95
-#define SC6601_REG_QC3_INT_FLAG		0x96
-#define SC6601_REG_QC3_INT_MASK		0x97
-#define SC6601_REG_DP_STAT			0x98
-#define SC6601_REG_DM_STAT			0x99
-#define Sc6601_REG_DPDM_INTERNAL	0x9a
-#define SC6601_REG_DPDM_CTRL2		0x9d
-#define SC6601_REG_DPDM_NONSTD_STAT	0x9e
 
 static const struct sc6601_chg_field sc6601_chg_fields[F_MAX] = {
 	SC6601_CHG_FIELD(F_VAC_OVP, SC6601_REG_VAC_VBUS_OVP, 4, 7),
@@ -205,7 +186,6 @@ static const struct sc6601_chg_field sc6601_chg_fields[F_MAX] = {
 	SC6601_CHG_FIELD(F_ICHG_CC, SC6601_REG_ICHG_CC, 0, 6),
 
 	SC6601_CHG_FIELD(F_ICO_EN, SC6601_REG_ICO_CTRL, 6, 6),
-
 
 	SC6601_CHG_FIELD(F_VBOOST, SC6601_REG_VBOOST_CTRL, 3, 7),
 	SC6601_CHG_FIELD(F_IBOOST, SC6601_REG_VBOOST_CTRL, 0, 2),
@@ -236,10 +216,6 @@ static inline int sc6601_chg_field_get(struct sc6601_priv *priv,
 	if (ret)
 		return ret;
 
-	if (sc6601_chg_fields[fd].range)
-		return linear_range_get_value(sc6601_chg_fields[fd].range,
-					       reg_val, val);
-
 	*val = reg_val;
 	return 0;
 }
@@ -248,39 +224,8 @@ static inline int sc6601_chg_field_set(struct sc6601_priv *priv,
 				       enum sc6601_chg_reg_field fd,
 				       unsigned int val)
 {
-	int ret;
-	bool f;
-	const struct linear_range *r;
-
-	if (sc6601_chg_fields[fd].range) {
-		r = sc6601_chg_fields[fd].range;
-
-		linear_range_get_selector_within(r, val, &val);
-	}
-
 	return regmap_field_write(priv->rmap_fields[fd], val);
 }
-
-/*
-enum {
-	MT6370_CHG_STAT_READY = 0,
-	MT6370_CHG_STAT_CHARGE_IN_PROGRESS,
-	MT6370_CHG_STAT_DONE,
-	MT6370_CHG_STAT_FAULT,
-	MT6370_CHG_STAT_MAX
-};
-
-enum {
-	MT6370_ATTACH_STAT_DETACH = 0,
-	MT6370_ATTACH_STAT_ATTACH_WAIT_FOR_BC12,
-	MT6370_ATTACH_STAT_ATTACH_BC12_DONE,
-	MT6370_ATTACH_STAT_ATTACH_MAX
-};*/
-
-#define SC6601_ADC_CHAN_VBUS	1
-#define SC6601_ADC_CHAN_IBUS	0
-#define SC6601_ADC_CHAN_VBAT	3
-#define SC6601_ADC_CHAN_IBAT	5
 
 static int sc6601_chg_adc_read(struct sc6601_priv *priv, int addr)
 {
@@ -315,85 +260,7 @@ static int sc6601_chg_adc_read(struct sc6601_priv *priv, int addr)
 static int sc6601_chg_get_online(struct sc6601_priv *priv,
 				 union power_supply_propval *val)
 {
-	mutex_lock(&priv->attach_lock);
 	val->intval = priv->online;
-	mutex_unlock(&priv->attach_lock);
-
-	return 0;
-}
-
-static int sc6601_chg_get_status(struct sc6601_priv *priv,
-				 union power_supply_propval *val)
-{
-	int ret;
-	unsigned int chg_stat;
-	union power_supply_propval online;
-
-	ret = power_supply_get_property(priv->psy, POWER_SUPPLY_PROP_ONLINE,
-					&online);
-	if (ret) {
-		dev_err(priv->dev, "Failed to get online status\n");
-		return ret;
-	}
-
-	if (!online.intval) {
-		val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
-		return 0;
-	}
-
-	/*ret = mt6370_chg_field_get(priv, F_CHG_STAT, &chg_stat);
-	if (ret)
-		return ret;
-
-	switch (chg_stat) {
-	case MT6370_CHG_STAT_READY:
-	case MT6370_CHG_STAT_FAULT:
-		val->intval = POWER_SUPPLY_STATUS_NOT_CHARGING;
-		return ret;
-	case MT6370_CHG_STAT_CHARGE_IN_PROGRESS:
-		val->intval = POWER_SUPPLY_STATUS_CHARGING;
-		return ret;
-	case MT6370_CHG_STAT_DONE:
-		val->intval = POWER_SUPPLY_STATUS_FULL;
-		return ret;
-	default:
-		val->intval = POWER_SUPPLY_STATUS_UNKNOWN;
-		return ret;
-	}*/
-	// deleteme
-	return ret;
-}
-
-static int sc6601_chg_get_charge_type(struct sc6601_priv *priv,
-				      union power_supply_propval *val)
-{
-	int type, ret;
-	unsigned int chg_stat, vbat_lvl;
-
-	/*ret = mt6370_chg_field_get(priv, F_CHG_STAT, &chg_stat);
-	if (ret)
-		return ret;
-
-	ret = mt6370_chg_field_get(priv, F_VBAT_LVL, &vbat_lvl);
-	if (ret)
-		return ret;
-
-	switch (chg_stat) {
-	case MT6370_CHG_STAT_CHARGE_IN_PROGRESS:
-		if (vbat_lvl)
-			type = POWER_SUPPLY_CHARGE_TYPE_FAST;
-		else
-			type = POWER_SUPPLY_CHARGE_TYPE_TRICKLE;
-		break;
-	case MT6370_CHG_STAT_READY:
-	case MT6370_CHG_STAT_DONE:
-	case MT6370_CHG_STAT_FAULT:
-	default:
-		type = POWER_SUPPLY_CHARGE_TYPE_NONE;
-		break;
-	}
-
-	val->intval = type;*/
 
 	return 0;
 }
@@ -405,9 +272,10 @@ static int sc6601_chg_get_chg_status(struct sc6601_priv *priv)
 	ret = regmap_bulk_read(priv->regmap, SC6601_REG_CHG_INT_STAT1, &val, 1);
 	if (ret < 0)
 		return ret;
+
 	val >>= 5;
 	val &= 0x7;
-	dev_err(priv->dev, "chg status: 0x%x\n", val);
+
 	return val;
 }
 
@@ -416,19 +284,19 @@ static int sc6601_chg_get_property(struct power_supply *psy,
 				   union power_supply_propval *val)
 {
 	struct sc6601_priv *priv = power_supply_get_drvdata(psy);
-	int adc_data, ret;
 
 	u8 chg = sc6601_chg_get_chg_status(priv);
-	bool online = sc6601_chg_get_online(priv, val);
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_ONLINE:
-		return online;
+		return sc6601_chg_get_online(priv, val);
 	case POWER_SUPPLY_PROP_STATUS:
 		if (chg == 5)
 			return POWER_SUPPLY_STATUS_FULL;
-		else if (chg == 1 || chg == 4 || chg == 1)
+		else if (chg == 1 || chg == 3 || chg == 4)
 			return POWER_SUPPLY_STATUS_CHARGING;
+		else
+			return POWER_SUPPLY_STATUS_DISCHARGING;
 	case POWER_SUPPLY_PROP_CHARGE_TYPE:
 		if (chg == 3 || chg == 4)
 			return POWER_SUPPLY_CHARGE_TYPE_FAST;
@@ -449,7 +317,14 @@ static int sc6601_chg_get_property(struct power_supply *psy,
 		val->intval = sc6601_chg_adc_read(priv, SC6601_ADC_CHAN_IBAT);
 		return 0;
 	case POWER_SUPPLY_PROP_USB_TYPE:
-		//val->intval = priv->psy_usb_type;
+		if (chg == 3 || chg == 4) {
+			val->intval = POWER_SUPPLY_USB_TYPE_DCP;
+		} else if (chg == 1) {
+			val->intval = POWER_SUPPLY_USB_TYPE_SDP;
+		} else {
+			val->intval = POWER_SUPPLY_USB_TYPE_UNKNOWN;
+		}
+
 		return 0;
 	default:
 		return -EINVAL;
@@ -460,43 +335,15 @@ static int sc6601_chg_set_property(struct power_supply *psy,
 				   enum power_supply_property psp,
 				   const union power_supply_propval *val)
 {
-	struct sc6601_priv *priv = power_supply_get_drvdata(psy);
-
-	switch (psp) {
-	case POWER_SUPPLY_PROP_ONLINE:
-		//return mt6370_chg_set_online(priv, val);
-	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT:
-		//return mt6370_chg_field_set(priv, F_ICHG, val->intval);
-	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_VOLTAGE:
-		//return mt6370_chg_field_set(priv, F_VOREG, val->intval);
-	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
-		//return mt6370_chg_field_set(priv, F_IAICR, val->intval);
-	case POWER_SUPPLY_PROP_INPUT_VOLTAGE_LIMIT:
-		//return mt6370_chg_field_set(priv, F_VMIVR, val->intval);
-	case POWER_SUPPLY_PROP_PRECHARGE_CURRENT:
-		//return mt6370_chg_field_set(priv, F_IPREC, val->intval);
-	case POWER_SUPPLY_PROP_CHARGE_TERM_CURRENT:
-		//return mt6370_chg_field_set(priv, F_IEOC, val->intval);
-	default:
-		return -EINVAL;
-	}
+	// FIXME
+	return -EINVAL;
 }
 
 static int sc6601_chg_property_is_writeable(struct power_supply *psy,
 					    enum power_supply_property psp)
 {
-	switch (psp) {
-	case POWER_SUPPLY_PROP_ONLINE:
-	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT:
-	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_VOLTAGE:
-	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
-	case POWER_SUPPLY_PROP_INPUT_VOLTAGE_LIMIT:
-	case POWER_SUPPLY_PROP_PRECHARGE_CURRENT:
-	case POWER_SUPPLY_PROP_CHARGE_TERM_CURRENT:
-		return 1;
-	default:
-		return 0;
-	}
+	// FIXME
+	return 0;
 }
 
 static enum power_supply_property sc6601_chg_properties[] = {
@@ -519,19 +366,8 @@ static const struct power_supply_desc sc6601_chg_psy_desc = {
 	.set_property = sc6601_chg_set_property,
 	.property_is_writeable = sc6601_chg_property_is_writeable,
 	.usb_types = BIT(POWER_SUPPLY_USB_TYPE_SDP) |
-		     BIT(POWER_SUPPLY_USB_TYPE_CDP) |
-		     BIT(POWER_SUPPLY_USB_TYPE_DCP) |
-		     BIT(POWER_SUPPLY_USB_TYPE_UNKNOWN),
-};
-
-#define SC6601_OTG_VBOOST_MIN	3900000
-#define SC6601_OTG_VBOOST_MAX	5800000
-#define SC6601_OTG_VBOOST_STEP	100
-#define SC6601_OTG_IBOOST_MIN	500000
-#define SC6601_OTG_IBOOST_MAX	3250000
-
-static const int sc6601_boost_curr_range[] = {
-	500000, 900000, 1300000, 1500000, 2100000, 2500000, 2900000, 3250000,
+				 BIT(POWER_SUPPLY_USB_TYPE_DCP) |
+				 BIT(POWER_SUPPLY_USB_TYPE_UNKNOWN),
 };
 
 static int sc6601_vboost_ctrl(struct sc6601_priv *priv, bool en)
@@ -561,7 +397,7 @@ static int sc6601_vboost_ctrl(struct sc6601_priv *priv, bool en)
 			sc6601_chg_field_set(priv, F_CHG_EN, 1);
 			return -EIO;
 		}
-	} while ( (en && !(boost_state & BIT(4))) || (!en && (boost_state & BIT(4))) );
+	} while (en != !!(boost_state & BIT(4)));
 
 	return 0;
 }
@@ -570,16 +406,12 @@ static int sc6601_vbus_enable(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 
-	dev_err(priv->dev, "vbus enable!\n");
-
 	return sc6601_vboost_ctrl(priv, 1);
 }
 
 static int sc6601_vbus_disable(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
-
-	dev_err(priv->dev, "vbus disable!\n");
 
 	return sc6601_vboost_ctrl(priv, 0);
 }
@@ -619,8 +451,6 @@ static int sc6601_vbus_set_voltage(struct regulator_dev *rdev,
 	int uv = max_uV;
 	if (max_uV > SC6601_OTG_VBOOST_MAX)
 		uv = SC6601_OTG_VBOOST_MAX;
-
-	dev_err(priv->dev, "vbus set %d uV!", uv);
 
 	uv = (uv / 1000) / SC6601_OTG_VBOOST_STEP;
 
@@ -665,8 +495,6 @@ static int sc6601_vbus_set_current(struct regulator_dev *rdev,
 			break;
 	}
 
-	dev_err(priv->dev, "vbus set %d [%d] uA!", ua, i);
-
 	ret = sc6601_chg_field_set(priv, F_IBOOST, i);
 	if (ret)
 		dev_err(priv->dev, "failed to set iboost current!");
@@ -709,10 +537,6 @@ static int sc6601_chg_init_rmap_fields(struct sc6601_priv *priv)
 
 	return 0;
 }
-
-static const int sc6601_wd_range[] = {
-	0, 500, 1000, 2000, 20000, 40000, 80000, 160000,
-};
 
 static int sc6601_chg_set_wd_timeout(struct sc6601_priv *priv, int ms)
 {
@@ -757,11 +581,6 @@ static int sc6601_chg_acdrv_ctrl(struct sc6601_priv *priv, bool en)
 	return 0;
 }
 
-#define SC6601_BUCK_VBAT_OFFSET	3840
-#define SC6601_BUCK_VBAT_STEP	8
-#define SC6601_BUCK_ICHG_STEP	50
-#define SC6601_BUCK_ICHG_MAX	3600
-
 static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 {
 	struct power_supply_battery_info *bat;
@@ -791,39 +610,45 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	sc6601_chg_acdrv_ctrl(priv, true);
 	sc6601_chg_field_set(priv, F_BATFET_RST_EN, 0);
 
-	// 3500 mV
+	// vsys 3500 mV
 	sc6601_chg_field_set(priv, F_VSYS_MIN, 4);
 
+	// disable plug in detection
 	sc6601_chg_field_set(priv, F_AUTO_INDET_EN, 0);
 
 	//val = 0xff;
 	//regmap_bulk_write(priv->regmap, SC6601_REG_QC3_INT_MASK, &val, 1);
 
 	sc6601_chg_field_set(priv, F_BATSNS_EN, 0);
+
 	bat_mv = bat->voltage_max_design_uv / 1000;
 	bat_mv -= SC6601_BUCK_VBAT_OFFSET;
 	bat_mv /= SC6601_BUCK_VBAT_STEP;
+
 	sc6601_chg_field_set(priv, F_VBAT, bat_mv);
+
 	bat_ma = bat->constant_charge_current_max_ua / 1000;
-	if (bat_ma > 12000)
-		ibat_ocp = 1;
-	else
-		ibat_ocp = 0;
-	if (bat_ma > SC6601_BUCK_ICHG_MAX)
+
+	if (bat_ma > SC6601_BUCK_ICHG_MAX) {
 		bat_ma = SC6601_BUCK_ICHG_MAX;
+	}
+
 	bat_ma /= SC6601_BUCK_VBAT_STEP;
+
 	sc6601_chg_field_set(priv, F_ICHG_CC, bat_ma);
 
 	// recharge after 100mV
 	sc6601_chg_field_set(priv, F_RECHG_DG, 0);
 	sc6601_chg_field_set(priv, F_VRECHG, 0);
 
-	// protections
+	// disable protections
 	sc6601_chg_field_set(priv, F_CONV_OCP_DIS, 0);
 	sc6601_chg_field_set(priv, F_IBAT_OCP_DIS, 0);
 	sc6601_chg_field_set(priv, F_VPMID_OVP_OTG_DIS, 0);
 	sc6601_chg_field_set(priv, F_VBAT_OVP_BUCK_DIS, 0);
+
 	// 0: 12A, 1: 16A
+	ibat_ocp = bat_ma > 12000 ? 1 : 0;
 	sc6601_chg_field_set(priv, F_IBATOCP, ibat_ocp);
 
 	sc6601_chg_field_set(priv, F_ACDRV_MANUAL_EN, 1);
@@ -834,6 +659,7 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	sc6601_chg_field_set(priv, F_JEITA_COOL_TEMP, 0);
 	sc6601_chg_field_set(priv, F_JEITA_WARM_TEMP, 3);
 
+	// enable adc
 	sc6601_chg_field_set(priv, F_ADC_EN, 1);
 
 	val = 0xb0;
@@ -869,21 +695,6 @@ static int sc6601_chg_init_psy(struct sc6601_priv *priv)
 	return PTR_ERR_OR_ZERO(priv->psy);
 }
 
-static void sc6601_chg_destroy_attach_lock(void *data)
-{
-	struct mutex *attach_lock = data;
-
-	mutex_destroy(attach_lock);
-}
-
-static void sc6601_chg_destroy_wq(void *data)
-{
-	struct workqueue_struct *wq = data;
-
-	flush_workqueue(wq);
-	destroy_workqueue(wq);
-}
-
 static irqreturn_t sc6601_chg_irq_charger(int irq, void *data)
 {
 	struct sc6601_priv *priv = data;
@@ -891,7 +702,6 @@ static irqreturn_t sc6601_chg_irq_charger(int irq, void *data)
 	u32 flt, state;
 	int ret;
 
-	dev_err(priv->dev, "charger irq happen!\n");
 	ret = regmap_bulk_read(priv->regmap, SC6601_REG_CHG_FLT_FLG, &val, 2);
 	flt = val[0] + (val[1] << 8);
 	if (flt != 0) {
@@ -899,10 +709,6 @@ static irqreturn_t sc6601_chg_irq_charger(int irq, void *data)
 	}
 	ret = regmap_bulk_read(priv->regmap, SC6601_REG_CHG_INT_FLG, &val, 3);
 	state = val[0] + (val[1] << 8) + (val[2] << 16);
-
-	if (state & BIT(12)) {
-		dev_err(priv->dev, "boost good");
-	}
 
 	return IRQ_HANDLED;
 }
@@ -1004,27 +810,6 @@ static int sc6601_chg_probe(struct platform_device *pdev)
 	ret = sc6601_chg_init_psy(priv);
 	if (ret)
 		return dev_err_probe(dev, ret, "Failed to init psy\n");
-	/*
-	mutex_init(&priv->attach_lock);
-	ret = devm_add_action_or_reset(dev, mt6370_chg_destroy_attach_lock,
-				       &priv->attach_lock);
-	if (ret)
-		return dev_err_probe(dev, ret, "Failed to init attach lock\n");
-
-	priv->attach = SC6601_ATTACH_STAT_DETACH;
-
-	priv->wq = create_singlethread_workqueue(dev_name(priv->dev));
-	if (!priv->wq)
-		return dev_err_probe(dev, -ENOMEM,
-				     "Failed to create workqueue\n");
-
-	ret = devm_add_action_or_reset(dev, mt6370_chg_destroy_wq, priv->wq);
-	if (ret)
-		return dev_err_probe(dev, ret, "Failed to init wq\n");
-
-	ret = devm_work_autocancel(dev, &priv->bc12_work, mt6370_chg_bc12_work_func);
-	if (ret)
-		return dev_err_probe(dev, ret, "Failed to init bc12 work\n");*/
 
 	ret = sc6601_chg_init_setting(priv);
 	if (ret)
