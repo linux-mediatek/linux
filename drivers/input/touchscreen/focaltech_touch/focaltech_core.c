@@ -97,6 +97,17 @@ int fts_request_handle_reset(struct fts_ts_data *ts_data, int hdelayms)
 	return 0;
 }
 
+int fts_request_handle_reset_ext(struct fts_ts_data *ts_data, int hdelayms)
+{
+	gpiod_set_value_cansleep(ts_data->reset_gpio, 1);
+
+	if (hdelayms)
+		msleep(hdelayms);
+
+	return 0;
+}
+
+
 void fts_irq_disable(void)
 {
 	unsigned long irqflags;
@@ -526,7 +537,7 @@ static int fts_irq_read_report(struct fts_ts_data *ts_data)
 
 		ts_data->touch_event_num = event_num;
 		for (i = 0; i < event_num; i++) {
-			base = FTS_ONE_TCH_LEN * i + 2;
+			base = FTS_ONE_TCH_LEN_V2 * i + 4;
 			pointid = (touch_buf[FTS_TOUCH_OFF_ID_YH + base]) >> 4;
 			if (pointid >= max_touch_num) {
 				dev_err(ts_data->dev,
@@ -538,14 +549,12 @@ static int fts_irq_read_report(struct fts_ts_data *ts_data)
 			events[i].id = pointid;
 			events[i].flag = touch_buf[FTS_TOUCH_OFF_E_XH + base] >>
 					 6;
-			events[i].x =
-				((touch_buf[FTS_TOUCH_OFF_E_XH + base] & 0x0F)
-				 << 8) +
-				(touch_buf[FTS_TOUCH_OFF_XL + base] & 0xFF);
-			events[i].y =
-				((touch_buf[FTS_TOUCH_OFF_ID_YH + base] & 0x0F)
-				 << 8) +
-				(touch_buf[FTS_TOUCH_OFF_YL + base] & 0xFF);
+			events[i].x = ((touch_buf[FTS_TOUCH_OFF_E_XH + base] & 0x0F) << 12) \
+			+ ((touch_buf[FTS_TOUCH_OFF_XL + base] & 0xFF) << 4) \
+			+ ((touch_buf[FTS_TOUCH_OFF_PRE + base] >> 4) & 0x0F);
+			events[i].y = ((touch_buf[FTS_TOUCH_OFF_ID_YH + base] & 0x0F) << 12) \
+			+ ((touch_buf[FTS_TOUCH_OFF_YL + base] & 0xFF) << 4) \
+			+ (touch_buf[FTS_TOUCH_OFF_PRE + base] & 0x0F);
 			events[i].p = touch_buf[FTS_TOUCH_OFF_PRE + base];
 			events[i].area = touch_buf[FTS_TOUCH_OFF_AREA + base];
 			if (events[i].p <= 0)
@@ -560,6 +569,7 @@ static int fts_irq_read_report(struct fts_ts_data *ts_data)
 		break;
 
 	case TOUCH_FW_INIT:
+		dev_err(ts_data->dev, "touch fw init!");
 		fts_release_all_finger();
 		fts_wait_tp_to_valid();
 		break;
@@ -974,7 +984,7 @@ static int fts_ts_probe(struct spi_device *spi)
 		dev_err(&spi->dev, "configure the gpios fail");
 
 #if (!FTS_CHIP_IDC)
-	fts_request_handle_reset(ts_data, 200);
+	fts_request_handle_reset_ext(ts_data, 100);
 #endif
 
 	ret = fts_get_ic_information(ts_data);

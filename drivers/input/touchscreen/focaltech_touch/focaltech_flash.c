@@ -1058,8 +1058,47 @@ static void fts_fwupg_work(struct work_struct *work)
 	}
 }
 
+static int fts_fwupg_get_ver_in_tp(u8 *ver)
+{
+	int ret = 0;
+
+	if (NULL == ver) {
+		dev_err(fts_data->dev, "ver is NULL");
+		return -EINVAL;
+	}
+
+	ret = fts_read_reg(FTS_REG_FW_VER, ver);
+	if (ret < 0) {
+		dev_err(fts_data->dev, "read fw ver from tp fail");
+		return ret;
+	}
+
+	return 0;
+}
+
+int fts_fwupg_reset_in_boot(void)
+{
+	int ret = 0;
+	u8 cmd = FTS_CMD_RESET;
+
+	dev_err(fts_data->dev, "reset in boot environment");
+	ret = fts_write(&cmd, 1);
+	if (ret < 0) {
+		dev_err(fts_data->dev, "pram/rom/bootloader reset cmd write fail");
+		return ret;
+	}
+
+	msleep(FTS_DELAY_UPGRADE_RESET);
+	return 0;
+}
+
 int fts_fwupg_init(struct fts_ts_data *ts_data)
 {
+	u8 ver;
+	fts_fwupg_get_ver_in_tp(&ver);
+	dev_err(fts_data->dev, "fw ver: %02x", ver);
+	fts_fwupg_reset_in_boot();
+	return 0;
 	int i = 0;
 	struct upgrade_setting_nf *setting = &upgrade_setting_list[0];
 	int setting_count =

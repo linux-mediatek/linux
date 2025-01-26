@@ -45,7 +45,7 @@
 #include <linux/kthread.h>
 #include <linux/dma-mapping.h>
 
-#define FTS_CHIP_TYPE 0x3680008A
+#define FTS_CHIP_TYPE 0x56720090
 
 #define BYTE_OFF_0(x)		(u8)((x) & 0xFF)
 #define BYTE_OFF_8(x)		(u8)(((x) >> 8) & 0xFF)
@@ -65,7 +65,7 @@
 
 #define FTS_MAX_CHIP_IDS	8
 
-#define FTS_CHIP_TYPE_MAPPING	{ { 0x8A, 0x56, 0x62, 0x56, 0x62, 0x56, 0xE2, 0x00, 0x00 } }
+#define FTS_CHIP_TYPE_MAPPING	{ { 0x90, 0x56, 0x72, 0x00, 0x00, 0x00, 0x00, 0x36, 0xB3 } }
 
 #define FILE_NAME_LENGTH			128
 #define ENABLE					1
@@ -109,6 +109,8 @@
 #define FTS_COORDS_ARR_SIZE		4
 #define FTS_ONE_TCH_LEN			6
 #define FTS_TOUCH_DATA_LEN		(FTS_MAX_POINTS_SUPPORT * FTS_ONE_TCH_LEN + 2)
+#define FTS_ONE_TCH_LEN_V2                  8
+#define FTS_TOUCH_DATA_LEN_V2  (FTS_MAX_POINTS_SUPPORT * FTS_ONE_TCH_LEN_V2 + 4)
 
 #define FTS_SIZE_DEFAULT		15
 
