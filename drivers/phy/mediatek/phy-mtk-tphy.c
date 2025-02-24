@@ -112,6 +112,10 @@
 #define U3P_U2PHYDTM1		0x06C
 #define P2C_RG_UART_EN			BIT(16)
 #define P2C_FORCE_IDDIG		BIT(9)
+#define P2C_FORCE_AVALID	BIT(10)
+#define P2C_FORCE_SESSEND	BIT(12)
+#define P2C_FORCE_VBUSVALID	BIT(13)
+
 #define P2C_RG_VBUSVALID		BIT(5)
 #define P2C_RG_SESSEND			BIT(4)
 #define P2C_RG_AVALID			BIT(2)
@@ -883,6 +887,9 @@ static void u2_phy_instance_power_on(struct mtk_tphy *tphy,
 
 		mtk_phy_set_bits(com + U3P_U2PHYDTM0, P2C_RG_SUSPENDM | P2C_FORCE_SUSPENDM);
 	}
+
+	mtk_phy_set_bits(com + U3P_U2PHYDTM1, P2C_FORCE_AVALID | P2C_FORCE_VBUSVALID | P2C_FORCE_SESSEND);
+
 	dev_dbg(tphy->dev, "%s(%d)\n", __func__, index);
 }
 
