@@ -18,7 +18,7 @@
 / {
 	chassis-type = "handset";
 	compatible = "xiaomi,emerald", "mediatek,mt6789";
-	model = "Redmi Note 13 Pro 4G";
+	model = "Xiaomi Redmi Note 13 Pro 4G";
 
 	aliases {
 		mmc1 = &mmc1;
@@ -36,18 +36,20 @@
 			height = <2400>;
 			stride = <((1080 + 8) * 4)>;
 			format = "a8r8g8b8";
+
+			panel = <&panel>;
 		};
 	};
 
 	gpio-keys {
 		compatible = "gpio-keys";
 
-		key-volume-up {
-			gpios = <&pio 66 GPIO_ACTIVE_HIGH>;
+		key-volume-down {
+			gpios = <&pio 66 GPIO_ACTIVE_LOW>;
 			label = "volume_down";
 			linux,code = <KEY_VOLUMEDOWN>;
 			wakeup-source;
-			debounce-interval = <15>;
+			debounce-interval = <100>;
 		};
 	};
 
@@ -66,59 +68,125 @@
 		constant-charge-current-max-microamp = <16000000>;
 		constant-charge-voltage-max-microvolt = <4740000>;
 	};
+
+	avdd_ts: regulator-avdd-ts {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg_avdd_ts";
+
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		regulator-enable-ramp-delay = <10>;
+
+		gpio = <&pio 53 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+	iovdd_ts: regulator-iovdd-ts {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg_iovdd_ts";
+
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+
+		regulator-enable-ramp-delay = <10>;
+
+		gpio = <&pio 157 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+	disp_vddi: regulator-disp-vddi {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg_disp_vddi";
+
+		gpio = <&pio 156 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on; /* until panel bringup */
+	};
+
+	disp_vdd: regulator-disp-vdd {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg_disp_vdd";
+
+		gpio = <&pio 14 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on; /* until panel bringup */
+	};
+
+	disp_vci: regulator-disp-vci {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg_disp_vci";
+
+		gpio = <&pio 155 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on; /* until panel bringup */
+	};
+
+	/* system wide semi-regulated power rail from vbat */
+	reg_vsys: regulator-vsys {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys";
+		regulator-always-on;
+		regulator-boot-on;
+	};
 };
 
 &cpu0 {
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc11_reg>;
 };
 
 &cpu1 {
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc11_reg>;
 };
 
 &cpu2 {
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc11_reg>;
 };
 
 &cpu3 {
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc11_reg>;
 };
 
-/* FIXME: Enabling more than 4 CPUs causes weird hangs in many places */
+/* FIXME: Enabling more than 4 CPUs causes weird hangs at boot,
+ * CPU4 and CPU5 can be enabled after boot by writing 1 to:
+ * /sys/devices/system/cpu/cpu4/online
+ * /sys/devices/system/cpu/cpu5/online
+ * CPU6 and CPU7 are fails to boot due some capability conflicts
+ */
 &cpu4 {
 	status = "disabled";
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc11_reg>;
 };
 
 &cpu5 {
 	status = "disabled";
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc11_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc11_reg>;
 };
 
 &cpu6 {
 	status = "disabled";
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc12_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc12_reg>;
 };
 
 &cpu7 {
 	status = "disabled";
 	cpu-supply = <&mt6366_vcore_reg>;
 	proc-supply = <&mt6366_vproc12_reg>;
-	sram-supply = <&mt6366_vsram_others_reg>;
+	sram-supply = <&mt6366_vsram_proc12_reg>;
 };
 
 &spi1 {
@@ -131,19 +199,56 @@
 	 * focaltech found in Huaxing panel variant (42)
 	 * goodix found in Visionox panel variant (41) */
 
-	/* focaltech,ft3683g */
+	touchscreen@0 {
+		/* ft3683g */
+		compatible = "focaltech,ft3680";
+		reg = <0x0>;
+
+		spi-max-frequency = <6000000>;
+
+		interrupt-parent = <&pio>;
+		interrupts = <9 0x2001>;
+		reset-gpios = <&pio 152 GPIO_ACTIVE_HIGH>;
+		focaltech,irq-gpio = <&pio 9 0x2001>;
+		focaltech,display-coords = <0 0 (1080*16) (2400*16)>;
+		focaltech,max-touch-number = <10>;
+
+		vdd-supply = <&avdd_ts>;
+		iovdd-supply = <&iovdd_ts>;
+
+		firmware-name = "focaltech/ft3683g_emerald.bin";
+	};
+
 	/* goodix,9916r */
 };
 
-&dsi0 {
-	/* FIXME: mediatek-drm causes kernel panic for now */
+/* FIXME: any job is invalid:
+ * [   80.540914] panfrost 13000000.gpu: js fault, js=0, status=DATA_INVALID_FAULT, head=0xa006480, tail=0xa006480
+ */
+&gpu {
 	status = "disabled";
+
+	mali-supply = <&mt6366_vgpu_reg>;
+};
+
+&dsi0 {
+	/* FIXME: mediatek-drm can't find any crtc */
+	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
 
 	panel: panel@0 {
 		compatible = "xiaomi,emerald-huaxing";
 		reg = <0>;
+
+		width-mm = <70>;
+		height-mm = <155>;
+
+		reset-gpios = <&pio 85 GPIO_ACTIVE_HIGH>;
+
+		vddi-supply = <&disp_vddi>;
+		vdd-supply = <&disp_vdd>;
+		vci-supply = <&disp_vci>;
 
 		port {
 			panel_in: endpoint {
@@ -161,20 +266,27 @@
 	};
 };
 
+&i2c2 {
+	status = "okay";
+};
+
 &i2c3 {
 	status = "okay";
 
 	nfc@28 {
-		/* There is no driver */
-		compatible = "nxp,pn557-i2c";
+		compatible = "nxp,pn557",
+					 "nxp,nxp-nci-i2c";
 		reg = <0x28>;
 
 		interrupts-extended = <&pio 1 IRQ_TYPE_LEVEL_HIGH>;
 
 		enable-gpios = <&pio 100 GPIO_ACTIVE_HIGH>;
 		firmware-gpios = <&pio 108 GPIO_ACTIVE_HIGH>;
-		clkfreq-gpios = <&pio 68 GPIO_ACTIVE_HIGH>;
 	};
+};
+
+&i2c4 {
+	status = "okay";
 };
 
 &i2c5 {
@@ -200,6 +312,7 @@
 		reset-gpio = <&pio 67 GPIO_ACTIVE_HIGH>;
 	};
 */
+	
 	subpmic: sc6601@61 {
 		compatible = "southchip,sc6601";
 		reg = <0x61>;
@@ -208,7 +321,7 @@
 		#interrupt-cells = <1>;
 		wakeup-source;
 
-		pmic_charger: sc6601-charger {
+		sc6601_charger: sc6601-charger {
 			compatible = "southchip,sc6601-charger";
 
 			monitored-battery = <&battery>;
@@ -216,7 +329,7 @@
 			interrupts = <0>, <6>;
 			interrupt-names = "charger", "hourse_keeping";
 
-			sc6601_otg_vbus_reg: usb-otg-vbus-regulator {
+			sc6601_otg_vbus_vreg: usb-otg-vbus-regulator {
 				regulator-name = "sc6601-otg-vbus";
 				regulator-min-microvolt = <5000000>;
 				regulator-max-microvolt = <5000000>;
@@ -227,56 +340,95 @@
 	};
 
 	/*
-	tcpc: sc6601-tcpc@62 {
-		compatible = "southchip,sc6601-tcpc";
-		reg = <0x62>;
-		interrupts-extended = <&pio 26 IRQ_TYPE_LEVEL_LOW>;
+	 !!! WIP !!!
+	subpmic: sc6601@61 {
+		compatible = "southchip,sc6601";
+		reg = <0x61>;
+		interrupts-extended = <&pio 4 IRQ_TYPE_LEVEL_LOW>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
 		wakeup-source;
 
-		connector {
-			compatible = "usb-c-connector";
-			label = "USB-C";
+		sc6601_adc: sc6601-adc {
+			compatible = "southchip,sc6601-adc";
+			#io-channel-cells = <1>;
+		};
 
-			self-powered;
+		sc6601_charger: sc6601-charger {
+			compatible = "southchip,sc6601-charger";
 
-			data-role = "dual";
-			power-role = "dual";
-			try-power-role = "sink";
+			monitored-battery = <&battery>;
 
-			op-sink-microwatt = <70000000>;
+			interrupts = <0>, <6>;
+			interrupt-names = "charger", "hourse_keeping";
 
-			source-pdos = <PDO_FIXED(5000, 3000,
-						   PDO_FIXED_DUAL_ROLE |
-						   PDO_FIXED_USB_COMM |
-						   PDO_FIXED_DATA_SWAP)>;
+			io-channels = <&sc6601_adc SC6601_ADC_CHAN_IBUS>,
+						  <&sc6601_adc SC6601_ADC_CHAN_VBUS>,
+						  <&sc6601_adc SC6601_ADC_CHAN_IBAT>,
+						  <&sc6601_adc SC6601_ADC_CHAN_VBAT>;
 
-			sink-pdos = <PDO_FIXED(5000, 3000,
-						 PDO_FIXED_DUAL_ROLE |
-						 PDO_FIXED_USB_COMM |
-						 PDO_FIXED_DATA_SWAP)
-						 PDO_VAR(5000, 12000, 5000)>;
+			sc6601_otg_vbus_reg: usb-otg-vbus-regulator {
+				regulator-name = "sc6601-otg-vbus";
+				regulator-min-microvolt = <5000000>;
+				regulator-max-microvolt = <5000000>;
+				regulator-min-microamp = <1500000>;
+				regulator-max-microamp = <1500000>;
+			};
+		};
 
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
+		sc6601_tcpc: sc6601-tcpc {
+			compatible = "southchip,sc6601-tcpc";
+			interrupts-extended = <&pio 26 IRQ_TYPE_LEVEL_LOW>;
+			wakeup-source;
 
-				sc6601_hs_in: port@0 {
-					reg = <0>;
-					endpoint {
-						remote-endpoint = <&usb2_hs_out>;
+			connector {
+				compatible = "usb-c-connector";
+				label = "USB-C";
+
+				self-powered;
+
+				data-role = "dual";
+				power-role = "dual";
+				try-power-role = "sink";
+
+				op-sink-microwatt = <70000000>;
+
+				source-pdos = <PDO_FIXED(5000, 3000,
+							PDO_FIXED_DUAL_ROLE |
+							PDO_FIXED_USB_COMM |
+							PDO_FIXED_DATA_SWAP)>;
+
+				sink-pdos = <PDO_FIXED(5000, 3000,
+							PDO_FIXED_DUAL_ROLE |
+							PDO_FIXED_USB_COMM |
+							PDO_FIXED_DATA_SWAP)
+							PDO_VAR(5000, 12000, 5000)>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					sc6601_hs_in: port@0 {
+						reg = <0>;
+						endpoint {
+							remote-endpoint = <&usb2_hs_out>;
+						};
 					};
 				};
 			};
 		};
-	};*/
+	};
 
+	*/
+	
 	/* flashlight,lm3643 @ 63 */
 };
 
 &i2c6 {
 	status = "okay";
-	/* camera-ldo,wl2866 @ 28 */
+	/* unknown-ldo @ 28 */
 	/* haptic,aw86224 @ 58 */
+	/* southchip,sc8541-master @ 6a */
 };
 
 &i2c7 {
@@ -287,18 +439,25 @@
 		reg = <0x55>;
 		monitored-battery = <&battery>;
 	};
+
+	/* southchip,sc8541-slave @ 6a */
+
+};
+
+&i2c8 {
+	status = "okay";
 };
 
 &usb2 {
 	status = "okay";
 
-	dr_mode = "otg";
+	dr_mode = "peripheral";
 	maximum-speed = "high-speed";
 
-	usb-role-switch;
-	role-switch-default-mode = "peripheral";
-
-	/*port {
+	//usb-role-switch;
+	//role-switch-default-mode = "peripheral";
+/* 
+	port {
 		usb2_hs_out: endpoint {
 			remote-endpoint = <&sc6601_hs_in>;
 		};
@@ -395,6 +554,13 @@
 			bias-disable;
 		};
 	};
+
+	sc6601_tcpc_irq: sc6601-irq-pins {
+		pins-irq {
+			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
+			input-enable;
+		};
+	};
 };
 
 &pwrap {
@@ -408,6 +574,23 @@
 
 		mt6366_regulator: mt6366-regulator {
 			compatible = "mediatek,mt6366-regulator", "mediatek,mt6358-regulator";
+
+			vsys-ldo1-supply = <&reg_vsys>;
+			vsys-ldo2-supply = <&reg_vsys>;
+			vsys-ldo3-supply = <&reg_vsys>;
+			vsys-vs1-supply = <&reg_vsys>;
+			vsys-vs2-supply = <&reg_vsys>;
+			vsys-vdram1-supply = <&reg_vsys>;
+			vsys-vcore-supply = <&reg_vsys>;
+			vsys-vpa-supply = <&reg_vsys>;
+			vsys-vproc11-supply = <&reg_vsys>;
+			vsys-vproc12-supply = <&reg_vsys>;
+			vsys-vgpu-supply = <&reg_vsys>;
+			vsys-vmodem-supply = <&reg_vsys>;
+			vs1-ldo1-supply = <&mt6366_vs1_reg>;
+			vs2-ldo1-supply = <&mt6366_vdram1_reg>;
+			vs2-ldo2-supply = <&mt6366_vs2_reg>;
+			vs2-ldo3-supply = <&mt6366_vs2_reg>;
 
 			mt6366_vdram1_reg: vdram1 {
 				regulator-name = "vdram1";
@@ -471,6 +654,14 @@
 				regulator-enable-ramp-delay = <200>;
 				regulator-allowed-modes = <MT6397_BUCK_MODE_AUTO
 										   MT6397_BUCK_MODE_FORCE_PWM>;
+
+				/* regulator coupling requires always-on */
+				/* FIXME: regulator coupling is broken
+				 * _set_opp_voltage: failed to set voltage (675000 675000 675000 mV): -22
+				*/
+				/*regulator-always-on;
+				regulator-coupled-with = <&mt6366_vsram_gpu_reg>;
+				regulator-coupled-max-spread = <100000>;*/
 			};
 
 			mt6366_vs2_reg: vs2 {
@@ -502,6 +693,7 @@
 				regulator-always-on;
 			};
 
+			/* LPDDR4X, always on */
 			mt6366_vdram2_reg: vdram2 {
 				regulator-name = "vdram2";
 				regulator-min-microvolt = <600000>;
@@ -529,6 +721,8 @@
 				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <1200000>;
 				regulator-enable-ramp-delay = <120>;
+				regulator-always-on;
+				regulator-boot-on;
 			};
 
 			mt6366_vio18_reg: vio18 {
@@ -537,6 +731,7 @@
 				regulator-max-microvolt = <1800000>;
 				regulator-enable-ramp-delay = <2700>;
 				regulator-always-on;
+				regulator-boot-on;
 			};
 
 			mt6366_vusb_reg: vusb {
@@ -566,6 +761,8 @@
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
 				regulator-enable-ramp-delay = <270>;
+				regulator-boot-on;
+				regulator-always-on;
 			};
 
 			mt6366_vfe28_reg: vfe28 {
@@ -573,9 +770,11 @@
 				regulator-min-microvolt = <2800000>;
 				regulator-max-microvolt = <2800000>;
 				regulator-enable-ramp-delay = <270>;
+				regulator-boot-on;
+				regulator-always-on;
 			};
 
-			mt6366_vsram_proc11_reg: vsram_proc11 {
+			mt6366_vsram_proc11_reg: vsram-proc11 {
 				regulator-name = "vsram_proc11";
 				regulator-min-microvolt = <500000>;
 				regulator-max-microvolt = <1293750>;
@@ -589,9 +788,11 @@
 				regulator-min-microvolt = <2800000>;
 				regulator-max-microvolt = <2800000>;
 				regulator-enable-ramp-delay = <270>;
+				regulator-boot-on;
+				regulator-always-on;
 			};
 
-			mt6366_vsram_others_reg: vsram_others {
+			mt6366_vsram_others_reg: vsram-others {
 				regulator-name = "vsram_others";
 				regulator-min-microvolt = <500000>;
 				regulator-max-microvolt = <1293750>;
@@ -600,7 +801,7 @@
 				regulator-always-on;
 			};
 
-			mt6366_vsram_core_reg: vsram_core {
+			mt6366_vsram_core_reg: vsram-core {
 				regulator-name = "vsram_core";
 				regulator-min-microvolt = <500000>;
 				regulator-max-microvolt = <1293750>;
@@ -608,12 +809,18 @@
 				regulator-always-on;
 			};
 
-			mt6366_vsram_gpu_reg: vsram_gpu {
+			mt6366_vsram_gpu_reg: vsram-gpu {
 				regulator-name = "vsram_gpu";
 				regulator-min-microvolt = <500000>;
 				regulator-max-microvolt = <1293750>;
 				regulator-ramp-delay = <6250>;
 				regulator-enable-ramp-delay = <240>;
+
+				/* regulator coupling requires always-on */
+				regulator-always-on;
+				/* FIXME */
+				/*regulator-coupled-with = <&mt6366_vgpu_reg>;
+				regulator-coupled-max-spread = <100000>;*/
 			};
 
 			mt6366_vxo22_reg: vxo22 {
@@ -656,7 +863,7 @@
 				regulator-enable-ramp-delay = <270>;
 			};
 
-			mt6366_vsram_proc12_reg: vsram_proc12 {
+			mt6366_vsram_proc12_reg: vsram-proc12 {
 				regulator-name = "vsram_proc12";
 				regulator-min-microvolt = <500000>;
 				regulator-max-microvolt = <1293750>;
@@ -761,6 +968,9 @@
 
 		mt6358_keys: keys {
 			compatible = "mediatek,mt6358-keys";
+
+			power-off-time-sec = <10>;
+			mediatek,long-press-mode = <1>;
 
 			power {
 				linux,keycodes = <KEY_POWER>;

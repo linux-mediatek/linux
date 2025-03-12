@@ -31,6 +31,8 @@
 #define SC6601_REG_VSYS_MIN			0x30
 #define SC6601_REG_VBAT				0x31
 #define SC6601_REG_ICHG_CC			0x32
+#define SC6601_REG_VINDPM			0x33
+#define SC6601_REG_IINDPM			0x34
 #define SC6601_REG_ICO_CTRL			0x35
 #define SC6601_REG_RECHARGE_CTRL	0x38
 #define SC6601_REG_VBOOST_CTRL		0x39
@@ -114,6 +116,8 @@ enum sc6601_chg_reg_field {
 	F_BATFET_RST_EN,
 	F_VSYS_MIN,
 	F_VBAT,
+	F_IINDPM,
+	F_IINDPM_DIS,
 	F_BATSNS_EN,
 	F_AUTO_INDET_EN,
 	F_HVDCP_EN,
@@ -182,6 +186,8 @@ static const struct sc6601_chg_field sc6601_chg_fields[F_MAX] = {
 
 	SC6601_CHG_FIELD(F_VSYS_MIN, SC6601_REG_VSYS_MIN, 0, 2),
 	SC6601_CHG_FIELD(F_VBAT, SC6601_REG_VBAT, 0, 6),
+	SC6601_CHG_FIELD(F_IINDPM, SC6601_REG_IINDPM, 0, 5),
+	SC6601_CHG_FIELD(F_IINDPM_DIS, SC6601_REG_IINDPM, 7, 7),
 	SC6601_CHG_FIELD(F_BATSNS_EN, SC6601_REG_VBAT, 7, 7),
 	SC6601_CHG_FIELD(F_ICHG_CC, SC6601_REG_ICHG_CC, 0, 6),
 
@@ -581,6 +587,22 @@ static int sc6601_chg_acdrv_ctrl(struct sc6601_priv *priv, bool en)
 	return 0;
 }
 
+#define SC6601_BUCK_IINDPM_MIN		100
+#define SC6601_BUCK_IINDPM_MAX		3250
+#define SC6601_BUCK_IINDPM_STEP		50
+#define SC6601_BUCK_IINDPM_OFFSET	100
+
+static int sc6601_set_input_current_limit(struct sc6601_priv *priv, int ma)
+{
+	if (ma < SC6601_BUCK_IINDPM_MIN)
+		ma = SC6601_BUCK_IINDPM_MIN;
+	if (ma > SC6601_BUCK_IINDPM_MAX)
+		ma = SC6601_BUCK_IINDPM_MAX;
+	ma -= SC6601_BUCK_IINDPM_OFFSET;
+	ma /= SC6601_BUCK_IINDPM_STEP;
+	return sc6601_chg_field_set(priv, F_IINDPM, ma);
+}
+
 static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 {
 	struct power_supply_battery_info *bat;
@@ -616,6 +638,7 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	// disable plug in detection
 	sc6601_chg_field_set(priv, F_AUTO_INDET_EN, 0);
 
+	// mask qc int
 	//val = 0xff;
 	//regmap_bulk_write(priv->regmap, SC6601_REG_QC3_INT_MASK, &val, 1);
 
@@ -636,6 +659,9 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	bat_ma /= SC6601_BUCK_VBAT_STEP;
 
 	sc6601_chg_field_set(priv, F_ICHG_CC, bat_ma);
+
+	sc6601_chg_field_set(priv, F_IINDPM_DIS, 0);
+	sc6601_set_input_current_limit(priv, 3000);
 
 	// recharge after 100mV
 	sc6601_chg_field_set(priv, F_RECHG_DG, 0);

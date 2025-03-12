@@ -639,6 +639,8 @@ static int mtk_disp_ovl_probe(struct platform_device *pdev)
 		return dev_err_probe(dev, ret, "Failed to add component\n");
 	}
 
+	dev_err(dev, "ovl probe done!\n");
+
 	return 0;
 }
 
@@ -739,6 +741,8 @@ static const struct of_device_id mtk_disp_ovl_driver_dt_match[] = {
 	{ .compatible = "mediatek,mt8192-disp-ovl-2l",
 	  .data = &mt8192_ovl_2l_driver_data},
 	{ .compatible = "mediatek,mt8195-disp-ovl",
+	  .data = &mt8195_ovl_driver_data},
+	{ .compatible = "mediatek,mt6789-disp-ovl",
 	  .data = &mt8195_ovl_driver_data},
 	{},
 };

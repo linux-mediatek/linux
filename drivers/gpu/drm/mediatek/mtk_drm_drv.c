@@ -884,7 +884,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
-	dev_err(dev, "gonna get mmsys");
+	dev_err(dev, "gonna get mmsys\n");
 
 	of_id = of_match_node(mtk_drm_of_ids, phandle);
 	if (!of_id)
@@ -907,11 +907,12 @@ static int mtk_drm_probe(struct platform_device *pdev)
 		private->ddp_comp[DDP_COMPONENT_DRM_OVL_ADAPTOR].dev = &ovl_adaptor->dev;
 		mtk_ddp_comp_init(NULL, &private->ddp_comp[DDP_COMPONENT_DRM_OVL_ADAPTOR],
 				  DDP_COMPONENT_DRM_OVL_ADAPTOR);
+		dev_err(dev, "add ovl adaptor\n");
 		component_match_add(dev, &match, compare_dev, &ovl_adaptor->dev);
 	}
 
 	/* Iterate over sibling DISP function blocks */
-	dev_err(dev, "gonna iterate nodes");
+	dev_err(dev, "gonna iterate nodes\n");
 	for_each_child_of_node(phandle->parent, node) {
 		const struct of_device_id *of_id;
 		enum mtk_ddp_comp_type comp_type;

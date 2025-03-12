@@ -368,6 +368,8 @@ static int mtk_disp_rdma_probe(struct platform_device *pdev)
 		return dev_err_probe(dev, ret, "Failed to add component\n");
 	}
 
+	dev_err(dev, "rdma probe done\n");
+
 	return 0;
 }
 

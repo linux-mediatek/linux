@@ -1434,7 +1434,12 @@ static int sc8541_charger_set_property(struct power_supply *psy,
 static int sc8541_charger_is_writeable(struct power_supply *psy,
                     enum power_supply_property prop)
 {
-    return 0;
+	switch (prop) {
+		case POWER_SUPPLY_PROP_ONLINE:
+			return 1;
+		default:
+			return 0;
+	}
 }
 
 static int sc8541_psy_register(struct sc8541_chip *sc)

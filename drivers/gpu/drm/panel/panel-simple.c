@@ -5325,9 +5325,8 @@ static const struct panel_desc_dsi xiaomi_emerald = {
 		.num_modes = 1,
 		.bpc = 8,
 		.size = {
-			/* Wrong */
-			.width = 68,
-			.height = 136,
+			.width = 70,
+			.height = 155,
 		},
 		.connector_type = DRM_MODE_CONNECTOR_DSI,
 	},
@@ -5376,20 +5375,27 @@ static int panel_simple_dsi_probe(struct mipi_dsi_device *dsi)
 	const struct panel_desc_dsi *desc;
 	int err;
 
+	dev_err(&dsi->dev, "panel simple probing!\n");
+
 	desc = of_device_get_match_data(&dsi->dev);
 	if (!desc)
 		return -ENODEV;
 
 	err = panel_simple_probe(&dsi->dev, &desc->desc);
-	if (err < 0)
+	if (err < 0) {
+		dev_err(&dsi->dev, "failed to probe panel simple: %d\n", err);
 		return err;
+	}
 
 	dsi->mode_flags = desc->flags;
 	dsi->format = desc->format;
 	dsi->lanes = desc->lanes;
 
+	dev_err(&dsi->dev, "panel simple dsi attach!\n");
+
 	err = mipi_dsi_attach(dsi);
 	if (err) {
+		dev_err(&dsi->dev, "panel simple dsi attach fail!\n");
 		struct panel_simple *panel = mipi_dsi_get_drvdata(dsi);
 
 		drm_panel_remove(&panel->base);

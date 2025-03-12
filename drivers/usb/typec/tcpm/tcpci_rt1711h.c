@@ -270,8 +270,6 @@ static irqreturn_t rt1711h_irq(int irq, void *dev_id)
 	u8 status;
 	struct rt1711h_chip *chip = dev_id;
 
-	dev_err(chip->dev, "tcpc irq!\n");
-
 	if (!chip->tcpci)
 		return IRQ_HANDLED;
 
