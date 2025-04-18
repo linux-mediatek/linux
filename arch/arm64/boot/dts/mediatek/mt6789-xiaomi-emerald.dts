@@ -475,23 +475,26 @@
 &mmc1 {
 	status = "okay";
 
-	pinctrl-names = "default", "state_uhs";
+	/*pinctrl-names = "default", "state_uhs";
 	pinctrl-0 = <&mmc1_pins_default>;
-	pinctrl-1 = <&mmc1_pins_uhs>;
+	pinctrl-1 = <&mmc1_pins_uhs>;*/
 
-	bus-width = <4>;
+	bus-width = <1>;
 
 	max-frequency = <200000000>;
 
 	cap-sd-highspeed;
-	sd-uhs-sdr12;
-	sd-uhs-sdr25;
+	//sd-uhs-sdr12;
+	//sd-uhs-sdr25;
 	sd-uhs-sdr50;
-	sd-uhs-sdr104;
+	//sd-uhs-sdr104;
 	sd-uhs-ddr50;
 
-	cd-debounce-delay-ms = <0>;
-	cd-gpios = <&pio 7 GPIO_ACTIVE_LOW>;
+	//cd-debounce-delay-ms = <0>;
+	//cd-gpios = <&pio 7 GPIO_ACTIVE_HIGH>;
+
+	//vmmc-supply = <&reg_vqmmc_dummy>;
+	//vqmmc-supply = <&reg_vqmmc_dummy>;
 	vmmc-supply = <&mt6366_vmch_reg>;
 	vqmmc-supply = <&mt6366_vmc_reg>;
 };
@@ -507,6 +510,7 @@
 };
 
 &pio {
+	/*
 	mmc1_pins_default: mmc1-pins-default-state {
 		pins-clk {
 			pinmux = <PINMUX_GPIO71__FUNC_MSDC1_CLK>;
@@ -543,7 +547,7 @@
 			drive-strength = <3>;
 			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
 		};
-	};
+	};*/
 
 	spi1_pins: spi1-pins {
 		pins-spi {

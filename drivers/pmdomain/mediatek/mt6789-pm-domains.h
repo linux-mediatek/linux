@@ -30,8 +30,8 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_CONN, 0x02A0, 0x02A4, 0x0228),
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_CONN_2ND, 0x02A0, 0x02A4, 0x0228),
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_1_CONN, 0x02A8, 0x02AC, 0x0258),
-	
 		},
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF,
 	},
 	[MT6789_POWER_DOMAIN_MFG0] = {
 		.name = "mfg0",
@@ -41,6 +41,7 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 		.pwr_sta2nd_offs = 0x0170,
  		.sram_pdn_bits = GENMASK(8, 8),
 		.sram_pdn_ack_bits = GENMASK(12, 12),
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF | MTK_SCPD_DOMAIN_SUPPLY,
 	},
 	[MT6789_POWER_DOMAIN_MFG1] = {
 		.name = "mfg1",
@@ -56,6 +57,7 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_MFG1, 0x02A0, 0x02A4, 0x0228),
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_2_MFG1_2ND, 0x0714, 0x0718, 0x0724),
 		},
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF | MTK_SCPD_DOMAIN_SUPPLY,
 	},
 	[MT6789_POWER_DOMAIN_MFG2] = {
 		.name = "mfg2",
@@ -65,6 +67,7 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 		.pwr_sta2nd_offs = 0x0170,
  		.sram_pdn_bits = GENMASK(8, 8),
 		.sram_pdn_ack_bits = GENMASK(12, 12),
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF,
 	},
 	[MT6789_POWER_DOMAIN_MFG3] = {
 		.name = "mfg3",
@@ -74,6 +77,7 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 		.pwr_sta2nd_offs = 0x0170,
  		.sram_pdn_bits = GENMASK(8, 8),
 		.sram_pdn_ack_bits = GENMASK(12, 12),
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF,
 	},
 	[MT6789_POWER_DOMAIN_ISP] = {
 		.name = "isp",
@@ -113,8 +117,8 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 		.bp_cfg = {
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_MM_VDEC, 0x02D4, 0x02D8, 0x02EC),
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_MM_VDEC_2ND, 0x02D4, 0x02D8, 0x02EC),
-
 		},
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF,
 	},
 	[MT6789_POWER_DOMAIN_VENC] = {
 		.name = "venc",
@@ -127,8 +131,8 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
 		.bp_cfg = {
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_MM_VENC, 0x02D4, 0x02D8, 0x02EC),
 			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_MM_VENC_2ND, 0x02D4, 0x02D8, 0x02EC),
-
 		},
+		.caps = MTK_SCPD_KEEP_DEFAULT_OFF,
 	},
 	[MT6789_POWER_DOMAIN_DISP] = {
 		.name = "disp",
@@ -153,7 +157,7 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6789[] = {
  		.sram_pdn_bits = GENMASK(8, 8),
 		.sram_pdn_ack_bits = GENMASK(12, 12),
 		.bp_cfg = {
-				BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_2_AUDIO, 0x0714, 0x0718, 0x0724),
+			BUS_PROT_WR_IGN(INFRA, MT6789_TOP_AXI_PROT_EN_2_AUDIO, 0x0714, 0x0718, 0x0724),
 		},
 	},
 	[MT6789_POWER_DOMAIN_CAM] = {
@@ -194,6 +198,5 @@ static const struct scpsys_soc_data mt6789_scpsys_data = {
 	.domains_data = scpsys_domain_data_mt6789,
 	.num_domains = ARRAY_SIZE(scpsys_domain_data_mt6789),
 };
-
 
 #endif /* __SOC_MEDIATEK_MT6789_PM_DOMAINS_H */
