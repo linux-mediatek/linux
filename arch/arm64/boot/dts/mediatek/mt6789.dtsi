@@ -1477,7 +1477,7 @@
 
 			interrupts = <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_w CLK_IMP_IIC_WRAP_W_AP_CLOCK_I2C0>,
+			clocks = <&imp_iic_wrap_w CLK_IMP_IIC_WRAP_W_I2C0>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1496,7 +1496,7 @@
 
 			interrupts = <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_w CLK_IMP_IIC_WRAP_W_AP_CLOCK_I2C1>,
+			clocks = <&imp_iic_wrap_w CLK_IMP_IIC_WRAP_W_I2C1>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1515,7 +1515,7 @@
 
 			interrupts = <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_AP_CLOCK_I2C2>,
+			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_I2C2>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1534,7 +1534,7 @@
 
 			interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_c CLK_IMP_IIC_WRAP_C_AP_CLOCK_I2C3>,
+			clocks = <&imp_iic_wrap_c CLK_IMP_IIC_WRAP_C_I2C3>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 
 			clock-names = "main", "dma";
@@ -1554,7 +1554,7 @@
 
 			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_AP_CLOCK_I2C4>,
+			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_I2C4>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1573,7 +1573,7 @@
 
 			interrupts = <GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_c CLK_IMP_IIC_WRAP_C_AP_CLOCK_I2C5>,
+			clocks = <&imp_iic_wrap_c CLK_IMP_IIC_WRAP_C_I2C5>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1592,7 +1592,7 @@
 
 			interrupts = <GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_c CLK_IMP_IIC_WRAP_C_AP_CLOCK_I2C6>,
+			clocks = <&imp_iic_wrap_c CLK_IMP_IIC_WRAP_C_I2C6>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1611,7 +1611,7 @@
 
 			interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_n CLK_IMP_IIC_WRAP_N_AP_CLOCK_I2C7>,
+			clocks = <&imp_iic_wrap_n CLK_IMP_IIC_WRAP_N_I2C7>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1630,7 +1630,7 @@
 
 			interrupts = <GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_AP_CLOCK_I2C8>,
+			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_I2C8>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
@@ -1649,7 +1649,7 @@
 
 			interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
 
-			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_AP_CLOCK_I2C9>,
+			clocks = <&imp_iic_wrap_en CLK_IMP_IIC_WRAP_EN_I2C9>,
 			         <&infracfg_ao CLK_IFRAO_AP_DMA>;
 			clock-names = "main", "dma";
 			clock-div = <1>;
