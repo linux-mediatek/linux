@@ -40,29 +40,8 @@ additionalProperties: false
 
 examples:
   - |
-    mcusys: syscon@c530000 {
-      compatible = "mediatek,mt6789-mcusys", "syscon";
-      reg = <0xc530000 0x1000>;
-      #clock-cells = <1>;
-    };
-
-  - |
-    topckgen: syscon@10000000 {
-        compatible = "mediatek,mt6789-topckgen", "syscon";
-        reg = <0x10000000 0x1000>;
-        #clock-cells = <1>;
-    };
-
-  - |
-    infracfg_ao: syscon@10001000 {
-        compatible = "mt6789-infracfg-ao", "syscon";
-        reg = <0x10001000 0x1000>;
-        #clock-cells = <1>;
-    };
-
-  - |
-    apmixedsys: syscon@1000c000 {
-        compatible = "mediatek,mt6789-apmixedsys", "syscon";
-        reg = <0x1000c000 0x1000>;
+    clock-controller@c530000 {
+        compatible = "mediatek,mt6789-mcusys", "syscon";
+        reg = <0xc530000 0x1000>;
         #clock-cells = <1>;
     };
