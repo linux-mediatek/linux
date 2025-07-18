@@ -38,11 +38,8 @@ static const struct mtk_clk_desc mfgcfg_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6789_mfgcfg[] = {
-	{
-		.compatible = "mediatek,mt6789-mfgcfg",
-		.data = &mfgcfg_desc,
-	},
-	{}
+	{ .compatible = "mediatek,mt6789-mfgcfg", .data = &mfgcfg_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6789_mfgcfg);
 

@@ -30,10 +30,10 @@ static const struct mtk_gate_regs ven1_cg_regs = {
 	}
 
 static const struct mtk_gate ven1_clks[] = {
-	GATE_VEN1(CLK_VEN1_CKE0_LARB, "ven1_cke0_larb", "venc_ck", 0),
-	GATE_VEN1(CLK_VEN1_CKE1_VENC, "ven1_cke1_venc", "venc_ck", 4),
-	GATE_VEN1(CLK_VEN1_CKE2_JPGENC, "ven1_cke2_jpgenc", "venc_ck", 8),
-	GATE_VEN1(CLK_VEN1_CKE5_GALS, "ven1_cke5_gals", "venc_ck", 28),
+	GATE_VEN1(CLK_VEN1_CKE0_LARB, "ven1_cke0_larb", "venc_sel", 0),
+	GATE_VEN1(CLK_VEN1_CKE1_VENC, "ven1_cke1_venc", "venc_sel", 4),
+	GATE_VEN1(CLK_VEN1_CKE2_JPGENC, "ven1_cke2_jpgenc", "venc_sel", 8),
+	GATE_VEN1(CLK_VEN1_CKE5_GALS, "ven1_cke5_gals", "venc_sel", 28),
 };
 
 static const struct mtk_clk_desc ven1_desc = {
@@ -41,14 +41,11 @@ static const struct mtk_clk_desc ven1_desc = {
 	.num_clks = ARRAY_SIZE(ven1_clks),
 };
 
-static const struct of_device_id of_match_clk_mt6789_venc[] = {
-	{
-		.compatible = "mediatek,mt6789-vencsys",
-		.data = &ven1_desc,
-	}, {
-		/* sentinel */
-	}
+static const struct of_device_id of_match_clk_mt6789_venc[] ={
+	{ .compatible = "mediatek,mt6789-vencsys", .data = &ven1_desc },
+	{ /* sentinel */ }
 };
+
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6789_venc);
 
 static struct platform_driver clk_mt6789_venc_drv = {

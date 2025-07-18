@@ -32,23 +32,23 @@ static const struct mtk_gate_regs mdp1_cg_regs = {
 	GATE_MTK(_id, _name, _parent, &mdp1_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
 
 static const struct mtk_gate mdp_clks[] = {
-	GATE_MDP0(CLK_MDP_RDMA0, "mdp_rdma0", "mdp_ck", 0),
-	GATE_MDP0(CLK_MDP_TDSHP0, "mdp_tdshp0", "mdp_ck", 1),
-	GATE_MDP0(CLK_MDP_IMG_DL_ASYNC0, "mdp_img_dl_async0", "mdp_ck", 2),
-	GATE_MDP0(CLK_MDP_IMG_DL_ASYNC1, "mdp_img_dl_async1", "mdp_ck", 3),
-	GATE_MDP0(CLK_MDP_SMI0, "mdp_smi0", "mdp_ck", 6),
-	GATE_MDP0(CLK_MDP_APB_BUS, "mdp_apb_bus", "mdp_ck", 7),
-	GATE_MDP0(CLK_MDP_WROT0, "mdp_wrot0", "mdp_ck", 8),
-	GATE_MDP0(CLK_MDP_RSZ0, "mdp_rsz0", "mdp_ck", 9),
-	GATE_MDP0(CLK_MDP_HDR0, "mdp_hdr0", "mdp_ck", 10),
-	GATE_MDP0(CLK_MDP_MUTEX0, "mdp_mutex0", "mdp_ck", 11),
-	GATE_MDP0(CLK_MDP_WROT1, "mdp_wrot1", "mdp_ck", 12),
-	GATE_MDP0(CLK_MDP_RSZ1, "mdp_rsz1", "mdp_ck", 13),
-	GATE_MDP0(CLK_MDP_FAKE_ENG0, "mdp_fake_eng0", "mdp_ck", 14),
-	GATE_MDP0(CLK_MDP_AAL0, "mdp_aal0", "mdp_ck", 15),
+	GATE_MDP0(CLK_MDP_RDMA0, "mdp_rdma0", "mdp_sel", 0),
+	GATE_MDP0(CLK_MDP_TDSHP0, "mdp_tdshp0", "mdp_sel", 1),
+	GATE_MDP0(CLK_MDP_IMG_DL_ASYNC0, "mdp_img_dl_async0", "mdp_sel", 2),
+	GATE_MDP0(CLK_MDP_IMG_DL_ASYNC1, "mdp_img_dl_async1", "mdp_sel", 3),
+	GATE_MDP0(CLK_MDP_SMI0, "mdp_smi0", "mdp_sel", 6),
+	GATE_MDP0(CLK_MDP_APB_BUS, "mdp_apb_bus", "mdp_sel", 7),
+	GATE_MDP0(CLK_MDP_WROT0, "mdp_wrot0", "mdp_sel", 8),
+	GATE_MDP0(CLK_MDP_RSZ0, "mdp_rsz0", "mdp_sel", 9),
+	GATE_MDP0(CLK_MDP_HDR0, "mdp_hdr0", "mdp_sel", 10),
+	GATE_MDP0(CLK_MDP_MUTEX0, "mdp_mutex0", "mdp_sel", 11),
+	GATE_MDP0(CLK_MDP_WROT1, "mdp_wrot1", "mdp_sel", 12),
+	GATE_MDP0(CLK_MDP_RSZ1, "mdp_rsz1", "mdp_sel", 13),
+	GATE_MDP0(CLK_MDP_FAKE_ENG0, "mdp_fake_eng0", "mdp_sel", 14),
+	GATE_MDP0(CLK_MDP_AAL0, "mdp_aal0", "mdp_sel", 15),
 
-	GATE_MDP1(CLK_MDP_IMG_DL_RELAY0_ASYNC0, "mdp_img_dl_rel0_as0", "mdp_ck", 0),
-	GATE_MDP1(CLK_MDP_IMG_DL_RELAY1_ASYNC1, "mdp_img_dl_rel1_as1", "mdp_ck", 8),
+	GATE_MDP1(CLK_MDP_IMG_DL_RELAY0_ASYNC0, "mdp_img_dl_rel0_as0", "mdp_sel", 0),
+	GATE_MDP1(CLK_MDP_IMG_DL_RELAY1_ASYNC1, "mdp_img_dl_rel1_as1", "mdp_sel", 8),
 };
 
 static const struct mtk_clk_desc mdp_desc = {
@@ -57,12 +57,8 @@ static const struct mtk_clk_desc mdp_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6789_mdp[] = {
-	{
-		.compatible = "mediatek,mt6789-mdpsys",
-		.data = &mdp_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6789-mdpsys", .data = &mdp_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6789_mdp);
 

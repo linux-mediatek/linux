@@ -57,14 +57,14 @@ static const struct mtk_gate_regs ipe_cg_regs = {
 	}
 
 static const struct mtk_gate ipe_clks[] = {
-	GATE_IPE(CLK_IPE_LARB19, "ipe_larb19", "ipe_ck", 0),
-	GATE_IPE(CLK_IPE_LARB20, "ipe_larb20", "ipe_ck", 1),
-	GATE_IPE(CLK_IPE_SMI_SUBCOM, "ipe_smi_subcom", "ipe_ck", 2),
-	GATE_IPE(CLK_IPE_FD, "ipe_fd", "ipe_ck", 3),
-	GATE_IPE(CLK_IPE_FE, "ipe_fe", "ipe_ck", 4),
-	GATE_IPE(CLK_IPE_RSC, "ipe_rsc", "ipe_ck", 5),
-	GATE_IPE(CLK_IPE_DPE, "ipe_dpe", "ipe_ck", 6),
-	GATE_IPE(CLK_IPE_GALS, "ipe_gals", "img1_ck", 8),
+	GATE_IPE(CLK_IPE_LARB19, "ipe_larb19", "ipe_sel", 0),
+	GATE_IPE(CLK_IPE_LARB20, "ipe_larb20", "ipe_sel", 1),
+	GATE_IPE(CLK_IPE_SMI_SUBCOM, "ipe_smi_subcom", "ipe_sel", 2),
+	GATE_IPE(CLK_IPE_FD, "ipe_fd", "ipe_sel", 3),
+	GATE_IPE(CLK_IPE_FE, "ipe_fe", "ipe_sel", 4),
+	GATE_IPE(CLK_IPE_RSC, "ipe_rsc", "ipe_sel", 5),
+	GATE_IPE(CLK_IPE_DPE, "ipe_dpe", "ipe_sel", 6),
+	GATE_IPE(CLK_IPE_GALS, "ipe_gals", "img1_sel", 8),
 };
 
 static const struct mtk_clk_desc ipesys_desc = {
@@ -73,15 +73,9 @@ static const struct mtk_clk_desc ipesys_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6789_img[] = {
-	{
-		.compatible = "mediatek,mt6789-imgsys",
-		.data = &imgsys_desc,
-	}, {
-		.compatible = "mediatek,mt6789-ipesys",
-		.data = &ipesys_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6789-imgsys", .data = &imgsys_desc },
+	{ .compatible = "mediatek,mt6789-ipesys", .data = &ipesys_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6789_img);
 

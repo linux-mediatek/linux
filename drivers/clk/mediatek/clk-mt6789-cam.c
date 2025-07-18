@@ -30,17 +30,17 @@ static const struct mtk_gate_regs cam_m_cg_regs = {
 	}
 
 static const struct mtk_gate cam_m_clks[] = {
-	GATE_CAM_M(CLK_CAM_M_LARB13, "cam_m_larb13", "cam_ck", 0),
-	GATE_CAM_M(CLK_CAM_M_LARB14, "cam_m_larb14", "cam_ck", 2),
-	GATE_CAM_M(CLK_CAM_M_CAM, "cam_m_cam", "cam_ck", 6),
-	GATE_CAM_M(CLK_CAM_M_CAMTG, "cam_m_camtg", "cam_ck", 7),
-	GATE_CAM_M(CLK_CAM_M_SENINF, "cam_m_seninf", "cam_ck", 8),
-	GATE_CAM_M(CLK_CAM_M_CAMSV1, "cam_m_camsv1", "cam_ck", 10),
-	GATE_CAM_M(CLK_CAM_M_CAMSV2, "cam_m_camsv2", "cam_ck", 11),
-	GATE_CAM_M(CLK_CAM_M_CAMSV3, "cam_m_camsv3", "cam_ck", 12),
-	GATE_CAM_M(CLK_CAM_M_MRAW0, "cam_m_mraw0", "cam_ck", 15),
-	GATE_CAM_M(CLK_CAM_M_FAKE_ENG, "cam_m_fake_eng", "cam_ck", 17),
-	GATE_CAM_M(CLK_CAM_M_CAM2MM_GALS, "cam_m_cam2mm_gals", "cam_ck", 19),
+	GATE_CAM_M(CLK_CAM_M_LARB13, "cam_m_larb13", "cam_sel", 0),
+	GATE_CAM_M(CLK_CAM_M_LARB14, "cam_m_larb14", "cam_sel", 2),
+	GATE_CAM_M(CLK_CAM_M_CAM, "cam_m_cam", "cam_sel", 6),
+	GATE_CAM_M(CLK_CAM_M_CAMTG, "cam_m_camtg", "cam_sel", 7),
+	GATE_CAM_M(CLK_CAM_M_SENINF, "cam_m_seninf", "cam_sel", 8),
+	GATE_CAM_M(CLK_CAM_M_CAMSV1, "cam_m_camsv1", "cam_sel", 10),
+	GATE_CAM_M(CLK_CAM_M_CAMSV2, "cam_m_camsv2", "cam_sel", 11),
+	GATE_CAM_M(CLK_CAM_M_CAMSV3, "cam_m_camsv3", "cam_sel", 12),
+	GATE_CAM_M(CLK_CAM_M_MRAW0, "cam_m_mraw0", "cam_sel", 15),
+	GATE_CAM_M(CLK_CAM_M_FAKE_ENG, "cam_m_fake_eng", "cam_sel", 17),
+	GATE_CAM_M(CLK_CAM_M_CAM2MM_GALS, "cam_m_cam2mm_gals", "cam_sel", 19),
 };
 
 static const struct mtk_clk_desc cam_m_desc = {
@@ -64,9 +64,9 @@ static const struct mtk_gate_regs cam_ra_cg_regs = {
 	}
 
 static const struct mtk_gate cam_ra_clks[] = {
-	GATE_CAM_RA(CLK_CAM_RA_LARBX, "cam_ra_larbx", "cam_ck", 0),
-	GATE_CAM_RA(CLK_CAM_RA_CAM, "cam_ra_cam", "cam_ck", 1),
-	GATE_CAM_RA(CLK_CAM_RA_CAMTG, "cam_ra_camtg", "camtm_ck", 2),
+	GATE_CAM_RA(CLK_CAM_RA_LARBX, "cam_ra_larbx", "cam_sel", 0),
+	GATE_CAM_RA(CLK_CAM_RA_CAM, "cam_ra_cam", "cam_sel", 1),
+	GATE_CAM_RA(CLK_CAM_RA_CAMTG, "cam_ra_camtg", "camtm_sel", 2),
 };
 
 static const struct mtk_clk_desc cam_ra_desc = {
@@ -90,9 +90,9 @@ static const struct mtk_gate_regs cam_rb_cg_regs = {
 	}
 
 static const struct mtk_gate cam_rb_clks[] = {
-	GATE_CAM_RB(CLK_CAM_RB_LARBX, "cam_rb_larbx", "cam_ck", 0),
-	GATE_CAM_RB(CLK_CAM_RB_CAM, "cam_rb_cam", "cam_ck", 1),
-	GATE_CAM_RB(CLK_CAM_RB_CAMTG, "cam_rb_camtg", "camtm_ck", 2),
+	GATE_CAM_RB(CLK_CAM_RB_LARBX, "cam_rb_larbx", "cam_sel", 0),
+	GATE_CAM_RB(CLK_CAM_RB_CAM, "cam_rb_cam", "cam_sel", 1),
+	GATE_CAM_RB(CLK_CAM_RB_CAMTG, "cam_rb_camtg", "camtm_sel", 2),
 };
 
 static const struct mtk_clk_desc cam_rb_desc = {
@@ -101,18 +101,10 @@ static const struct mtk_clk_desc cam_rb_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6789_cam[] = {
-	{
-		.compatible = "mediatek,mt6789-camsys",
-		.data = &cam_m_desc,
-	}, {
-		.compatible = "mediatek,mt6789-camsys-rawa",
-		.data = &cam_ra_desc,
-	}, {
-		.compatible = "mediatek,mt6789-camsys-rawb",
-		.data = &cam_rb_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6789-camsys", .data = &cam_m_desc },
+	{ .compatible = "mediatek,mt6789-camsys-rawa", .data = &cam_ra_desc },
+	{ .compatible = "mediatek,mt6789-camsys-rawb", .data = &cam_rb_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6789_cam);
 

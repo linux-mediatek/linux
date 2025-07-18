@@ -50,7 +50,7 @@ static const struct mtk_clk_desc mcu_desc = {
 
 static const struct of_device_id of_match_clk_mt6789_mcu[] = {
 	{ .compatible = "mediatek,mt6789-mcusys", .data = &mcu_desc },
-	{ /* sentinel */}
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6789_mcu);
 
