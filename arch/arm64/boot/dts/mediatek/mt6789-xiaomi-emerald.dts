@@ -150,13 +150,14 @@
 };
 
 &gpu {
-	status = "disabled";
+	status = "okay";
 
 	mali-supply = <&mt6366_vgpu_reg>;
+	sram-supply = <&mt6366_vsram_gpu_reg>;
 };
 
 &dsi0 {
-	status = "okay";
+	status = "disabled";
 
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -498,7 +499,7 @@
 			mt6366_vgpu_reg: vgpu {
 				regulator-name = "vgpu";
 				regulator-min-microvolt = <500000>;
-				regulator-max-microvolt = <1293750>;
+				regulator-max-microvolt = <850000>;
 				regulator-ramp-delay = <6250>;
 				regulator-enable-ramp-delay = <200>;
 				regulator-allowed-modes = <MT6397_BUCK_MODE_AUTO
@@ -656,8 +657,8 @@
 
 			mt6366_vsram_gpu_reg: vsram-gpu {
 				regulator-name = "vsram_gpu";
-				regulator-min-microvolt = <500000>;
-				regulator-max-microvolt = <1293750>;
+				regulator-min-microvolt = <750000>;
+				regulator-max-microvolt = <950000>;
 				regulator-ramp-delay = <6250>;
 				regulator-enable-ramp-delay = <240>;
 
