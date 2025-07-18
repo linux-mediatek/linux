@@ -876,7 +876,18 @@ static const char * const mediatek_pm_domains[] = { "core0", "core1", "core2",
  * On new devicetrees please use the _b variant with a single and
  * coupled regulators instead.
  */
+
 static const char * const legacy_supplies[] = { "mali", "sram", NULL };
+
+static const struct panfrost_compatible mediatek_mt6789_data = {
+	.num_supplies = ARRAY_SIZE(legacy_supplies) - 1,
+	.supply_names = legacy_supplies,
+	.num_pm_domains = 2,
+	.pm_domain_names = mediatek_pm_domains,
+	.pm_features = BIT(GPU_PM_CLK_DIS) | BIT(GPU_PM_VREG_OFF),
+	.gpu_quirks = BIT(GPU_QUIRK_FORCE_AARCH64_PGTABLE),
+};
+
 static const struct panfrost_compatible mediatek_mt8183_data = {
 	.num_supplies = ARRAY_SIZE(legacy_supplies) - 1,
 	.supply_names = legacy_supplies,
@@ -944,6 +955,7 @@ static const struct of_device_id dt_match[] = {
 	{ .compatible = "arm,mali-t880", .data = &default_data, },
 	{ .compatible = "arm,mali-bifrost", .data = &default_data, },
 	{ .compatible = "arm,mali-valhall-jm", .data = &default_data, },
+	{ .compatible = "mediatek,mt6789-mali", .data = &mediatek_mt6789_data },
 	{ .compatible = "mediatek,mt8183-mali", .data = &mediatek_mt8183_data },
 	{ .compatible = "mediatek,mt8183b-mali", .data = &mediatek_mt8183_b_data },
 	{ .compatible = "mediatek,mt8186-mali", .data = &mediatek_mt8186_data },
