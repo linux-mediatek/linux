@@ -90,6 +90,15 @@ config MFD_AS3711
 	help
 	  Support for the AS3711 PMIC from AMS
 
+
+config MFD_SC6601
+	tristate "SouthChip SubPMIC"
+	select MFD_CORE
+	select REGMAP_I2C
+	depends on I2C
+	help
+	  Say yes here to add support for SouthChip SC6601 SubPMIC.
+
 config MFD_SMPRO
 	tristate "Ampere Computing SMpro core driver"
 	depends on I2C

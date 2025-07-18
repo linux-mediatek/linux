@@ -795,6 +795,13 @@ config CHARGER_BQ256XX
 	  charge management and system power path management devices for single
 	  cell Li-ion and Li-polymer batteries.
 
+config CHARGER_SC6601
+	tristate "SouthChip SC6601 Charger Driver"
+	depends on MFD_SC6601
+	depends on REGULATOR
+	help
+	  Say Y here to enable support for SouthChip SC6601 battery charger.
+
 config CHARGER_RK817
 	tristate "Rockchip RK817 PMIC Battery Charger"
 	depends on MFD_RK8XX
