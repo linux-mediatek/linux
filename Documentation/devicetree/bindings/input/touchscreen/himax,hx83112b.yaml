@@ -16,6 +16,7 @@ properties:
   compatible:
     enum:
       - himax,hx83100a
+      - himax,hx83102e
       - himax,hx83112b
 
   reg:
