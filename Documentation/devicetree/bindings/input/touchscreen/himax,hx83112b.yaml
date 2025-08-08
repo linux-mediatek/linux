@@ -28,6 +28,8 @@ properties:
   reset-gpios:
     maxItems: 1
 
+  vdd-supply: true
+
   touchscreen-inverted-x: true
   touchscreen-inverted-y: true
   touchscreen-size-x: true
