@@ -21,6 +21,7 @@
 #include <linux/input/touchscreen.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
+#include <linux/regulator/consumer.h>
 #include <linux/regmap.h>
 
 #define HIMAX_MAX_POINTS		10
@@ -72,6 +73,7 @@ struct himax_ts_data {
 	struct input_dev *input_dev;
 	struct i2c_client *client;
 	struct regmap *regmap;
+	struct regulator *vdd;
 	struct touchscreen_properties props;
 };
 
@@ -356,6 +358,26 @@ static int himax_probe(struct i2c_client *client)
 		return error;
 	}
 
+	ts->vdd = devm_regulator_get_optional(dev, "vdd");
+	if (IS_ERR(ts->vdd)) {
+		error = PTR_ERR(ts->vdd);
+
+		if (error == -ENODEV) {
+			ts->vdd = NULL;
+		} else {
+			dev_err(dev, "Failed to get vdd: %d\n", error);
+			return error;
+		}
+	}
+
+	if (ts->vdd) {
+		error = regulator_enable(ts->vdd);
+		if (error) {
+			dev_err(dev, "Failed to enable vdd: %d\n", error);
+			return error;
+		}
+	}
+
 	himax_reset(ts);
 
 	if (ts->chip->check_id) {
@@ -379,7 +401,14 @@ static int himax_probe(struct i2c_client *client)
 
 static int himax_suspend(struct device *dev)
 {
+	int ret;
 	struct himax_ts_data *ts = dev_get_drvdata(dev);
+
+	if (ts->vdd) {
+		ret = regulator_disable(ts->vdd);
+		if (ret)
+			dev_warn(dev, "Failed to disable vdd: %d\n", ret);
+	}
 
 	disable_irq(ts->client->irq);
 	return 0;
@@ -387,9 +416,22 @@ static int himax_suspend(struct device *dev)
 
 static int himax_resume(struct device *dev)
 {
+	int ret;
 	struct himax_ts_data *ts = dev_get_drvdata(dev);
 
 	enable_irq(ts->client->irq);
+
+	if (ts->vdd) {
+		ret = regulator_enable(ts->vdd);
+		if (ret) {
+			dev_err(dev, "Failed to enable vdd: %d\n", ret);
+			regulator_disable(ts->vdd);
+			return ret;
+		}
+
+		himax_reset(ts);
+	}
+
 	return 0;
 }
 
