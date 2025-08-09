@@ -2612,6 +2612,131 @@ static struct svs_bank svs_mt8186_banks[] = {
 	},
 };
 
+static struct svs_bank svs_mt6771_banks[] = {
+	{
+		.pdata = (const struct svs_bank_pdata) {
+			.sw_id			= SVSB_SWID_CPU_LITTLE,
+			.set_freq_pct		= svs_set_bank_freq_pct_v2,
+			.get_volts		= svs_get_bank_volts_v2,
+			.cpu_id			= 0,
+			.buck_name		= "proc",
+			.opp_count		= MAX_OPP_ENTRIES,
+			.vboot			= 0x30,
+			.volt_step		= 6250,
+			.volt_base		= 500000,
+			.age_config		= 0x555555,
+			.dc_config		= 0x555555,
+			.vco			= 0x10,
+			.chk_shift		= 0x77,
+			.int_st			= BIT(0),
+			.ctl0			= 0x00010001,
+			.dev_fuse_map		= (const struct svs_fusemap[BDEV_MAX]) {
+				{ 16, 0 }, { 16, 8 }, { 17, 16 }, { 16, 16 }, { 16, 24 }
+			}
+		},
+		.volt_flags	= SVSB_INIT01_VOLT_INC_ONLY,
+		.mode_support	= SVSB_MODE_INIT01 | SVSB_MODE_INIT02,
+		.freq_base	= 1989000000,
+		.core_sel	= 0x8fff0000,
+		.dvt_fixed	= 0x5,
+		.vmax		= 0x64,
+		.vmin		= 0x10,
+
+	},
+	{
+		.pdata = (const struct svs_bank_pdata) {
+			.sw_id			= SVSB_SWID_CPU_BIG,
+			.set_freq_pct		= svs_set_bank_freq_pct_v2,
+			.get_volts		= svs_get_bank_volts_v2,
+			.cpu_id			= 4,
+			.buck_name		= "proc",
+			.opp_count		= MAX_OPP_ENTRIES,
+			.vboot			= 0x30,
+			.volt_step		= 6250,
+			.volt_base		= 500000,
+			.age_config		= 0x555555,
+			.dc_config		= 0x555555,
+			.vco			= 0x10,
+			.chk_shift		= 0x77,
+			.int_st			= BIT(1),
+			.ctl0			= 0x00000001,
+			.dev_fuse_map		= (const struct svs_fusemap[BDEV_MAX]) {
+				{ 18, 0 }, { 18, 8 }, { 17, 0 }, { 18, 16 }, { 18, 24 }
+			}
+		},
+		.volt_flags	= SVSB_INIT01_VOLT_INC_ONLY,
+		.mode_support	= SVSB_MODE_INIT01 | SVSB_MODE_INIT02,
+		.freq_base	= 1989000000,
+		.core_sel	= 0x8fff0001,
+		.dvt_fixed	= 0x5,
+		.vmax		= 0x64,
+		.vmin		= 0x10,
+
+	},
+	{
+		.pdata = (const struct svs_bank_pdata) {
+			.sw_id			= SVSB_SWID_CCI,
+			.set_freq_pct		= svs_set_bank_freq_pct_v2,
+			.get_volts		= svs_get_bank_volts_v2,
+			.buck_name		= "proc",
+			.opp_count		= MAX_OPP_ENTRIES,
+			.vboot			= 0x30,
+			.volt_step		= 6250,
+			.volt_base		= 500000,
+			.age_config		= 0x555555,
+			.dc_config		= 0x555555,
+			.vco			= 0x10,
+			.chk_shift		= 0x77,
+			.int_st			= BIT(2),
+			.ctl0			= 0x00100003,
+			.dev_fuse_map		= (const struct svs_fusemap[BDEV_MAX]) {
+				{ 4, 0 }, { 4, 8 }, { 5, 16 }, { 4, 16 }, { 4, 24 }
+			}
+		},
+		.volt_flags	= SVSB_INIT01_VOLT_INC_ONLY,
+		.mode_support	= SVSB_MODE_INIT01 | SVSB_MODE_INIT02,
+		.freq_base	= 1196000000,
+		.core_sel	= 0x8fff0002,
+		.dvt_fixed	= 0x5,
+		.vmax		= 0x64,
+		.vmin		= 0x10,
+	},
+	{
+		.pdata = (const struct svs_bank_pdata) {
+			.sw_id			= SVSB_SWID_GPU,
+			.set_freq_pct		= svs_set_bank_freq_pct_v2,
+			.get_volts		= svs_get_bank_volts_v2,
+			.buck_name		= "mali",
+			.tzone_name		= "gpu",
+			.opp_count		= MAX_OPP_ENTRIES,
+			.vboot			= 0x30,
+			.volt_step		= 6250,
+			.volt_base		= 500000,
+			.age_config		= 0x555555,
+			.dc_config		= 0x555555,
+			.vco			= 0x10,
+			.chk_shift		= 0x77,
+			.int_st			= BIT(3),
+			.ctl0			= 0x00050001,
+			.tzone_htemp		= 85000,
+			.tzone_htemp_voffset	= 0,
+			.tzone_ltemp		= 25000,
+			.tzone_ltemp_voffset	= 3,
+			.dev_fuse_map		= (const struct svs_fusemap[BDEV_MAX]) {
+				{ 6, 0 }, { 6, 8 }, { 5, 0 }, { 6, 16 }, { 6, 24 }
+			}
+		},
+		.volt_flags	= SVSB_INIT01_PD_REQ | SVSB_INIT01_VOLT_INC_ONLY,
+		.mode_support	= SVSB_MODE_INIT01 | SVSB_MODE_INIT02 | SVSB_MODE_MON,
+		.freq_base	= 900000000,
+		.core_sel	= 0x8fff0003,
+		.dvt_fixed	= 0x2,
+		.vmax		= 0x40,
+		.vmin		= 0x10,
+	},
+};
+
+
 static struct svs_bank svs_mt8183_banks[] = {
 	{
 		.pdata = (const struct svs_bank_pdata) {
@@ -2791,6 +2916,19 @@ static const struct svs_platform_data svs_mt8186_platform_data = {
 	}
 };
 
+static const struct svs_platform_data svs_mt6771_platform_data = {
+	.name = "mt6771-svs",
+	.banks = svs_mt6771_banks,
+	.efuse_parsing = svs_mt8183_efuse_parsing,
+	.probe = svs_mt8183_platform_probe,
+	.regs = svs_regs_v2,
+	.bank_max = ARRAY_SIZE(svs_mt8183_banks),
+	.glb_fuse_map = (const struct svs_fusemap[GLB_MAX]) {
+		/* VMIN not present */
+		{ 0, 4 }, { -1, 0 }
+	}
+};
+
 static const struct svs_platform_data svs_mt8183_platform_data = {
 	.name = "mt8183-svs",
 	.banks = svs_mt8183_banks,
@@ -2805,6 +2943,7 @@ static const struct svs_platform_data svs_mt8183_platform_data = {
 };
 
 static const struct of_device_id svs_of_match[] = {
+	{ .compatible = "mediatek,mt6771-svs", .data = &svs_mt6771_platform_data },
 	{ .compatible = "mediatek,mt8195-svs", .data = &svs_mt8195_platform_data },
 	{ .compatible = "mediatek,mt8192-svs", .data = &svs_mt8192_platform_data },
 	{ .compatible = "mediatek,mt8188-svs", .data = &svs_mt8188_platform_data },
