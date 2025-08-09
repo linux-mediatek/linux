@@ -123,7 +123,7 @@ static void efi_earlycon_scroll_up(void)
 static void efi_earlycon_write_char(u32 *dst, unsigned char c, unsigned int h)
 {
 	const u32 color_black = 0x00000000;
-	const u32 color_white = 0x00ffffff;
+	const u32 color_white = 0xffffffff;
 	const u8 *src;
 	int m, n, bytes;
 	u8 x;
