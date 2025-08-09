@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR MIT)
+#include "mt8183.dtsi"
+/* cpuidle & cpufreq are broken with android firmware */
+/ {
+	compatible = "mediatek,mt6771";
+	cpus {
+		cpu@0 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@1 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@2 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@3 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@100 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@101 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@102 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		cpu@103 {
+			/delete-property/ cpu-idle-states;
+			/delete-property/ operating-points-v2;
+		};
+		/delete-node/ idle-states;
+	};
+};
