@@ -16,19 +16,63 @@
 
 #include "sc6601.h"
 
+#define SC6601_TCPC_I2CADDR	0x62
+
+#define SC6601_MAX_ADDRLEN	2
+
+#define SC6601_REG_HK_DID	0x100
+#define SC6601_REG_HK_IRQ	0x102
+#define SC6601_REG_HK_IRQ_MASK	0x103
+
+#define SC6601_DEVICE_ID	0x66
+#define SC6601_1P1_DEVICE_ID	0x61
+
+static const struct regmap_irq sc6601_irqs[] = {
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_CHARGER, 8),
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_DVCHG, 8),
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_LED, 8),
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_DPDM, 8),
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_UFCS, 8),
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_HK, 8),
+	REGMAP_IRQ_REG_LINE(SC6601_IRQ_CID, 8),
+};
+
+static const struct regmap_irq_chip sc6601_irq_chip = {
+	.name		= "sc6601-irqs",
+	.status_base	= SC6601_REG_HK_IRQ,
+	.mask_base	= SC6601_REG_HK_IRQ_MASK,
+	.num_regs	= 1,
+	.irqs		= sc6601_irqs,
+	.num_irqs	= ARRAY_SIZE(sc6601_irqs),
+};
+
+static const struct resource sc6601_charger_irqs[] = {
+	DEFINE_RES_IRQ_NAMED(SC6601_IRQ_CHARGER, "charger"),
+	DEFINE_RES_IRQ_NAMED(SC6601_IRQ_DVCHG, "dvchg"),
+	DEFINE_RES_IRQ_NAMED(SC6601_IRQ_DPDM, "dpdm"),
+	DEFINE_RES_IRQ_NAMED(SC6601_IRQ_UFCS, "ufcs"),
+	DEFINE_RES_IRQ_NAMED(SC6601_IRQ_HK, "hourse_keeping"),
+};
+
 static const struct mfd_cell sc6601_devices[] = {
-	MFD_CELL_OF("sc6601-adc",
-		    NULL, NULL, 0, 0, "southchip,sc6601-adc"),
-	MFD_CELL_OF("sc6601-charger",
-		    NULL, NULL, 0, 0, "southchip,sc6601-charger"),
+	MFD_CELL_OF("sc6601-charger", sc6601_charger_irqs,
+		    NULL, 0, 0, "southchip,sc6601-charger"),
+	MFD_CELL_OF("sc6601-tcpc",
+		    NULL, NULL, 0, 0, "southchip,sc6601-tcpc"),
 };
 
 static int sc6601_regmap_write(void *context, const void *data, size_t count)
 {
 	struct sc6601_info *info = context;
-	const u8 *_data = data;
+	const u8 *u8_buf = data;
+	u8 bank_idx, bank_addr;
+	int len = count - SC6601_MAX_ADDRLEN;
 
-	return i2c_smbus_write_i2c_block_data(info->i2c, _data[1], count - 2, _data + 2);
+	bank_idx = u8_buf[0];
+	bank_addr = u8_buf[1];
+
+	return i2c_smbus_write_i2c_block_data(info->i2c[bank_idx], bank_addr,
+					      len, data + SC6601_MAX_ADDRLEN);
 }
 
 static int sc6601_regmap_read(void *context, const void *reg_buf,
@@ -36,9 +80,14 @@ static int sc6601_regmap_read(void *context, const void *reg_buf,
 {
 	int ret;
 	struct sc6601_info *info = context;
-	const u8 *_reg_buf = reg_buf;
+	const u8 *u8_buf = reg_buf;
+	u8 bank_idx, bank_addr;
 
-	ret = i2c_smbus_read_i2c_block_data(info->i2c, _reg_buf[1], val_size, val_buf);
+	bank_idx = u8_buf[0];
+	bank_addr = u8_buf[1];
+
+	ret = i2c_smbus_read_i2c_block_data(info->i2c[bank_idx], bank_addr,
+					    val_size, val_buf);
 	if (ret < 0)
 		return ret;
 
@@ -56,173 +105,75 @@ static const struct regmap_config sc6601_regmap_config = {
 	.reg_format_endian = REGMAP_ENDIAN_BIG,
 };
 
-static void sc6601_irq_lock(struct irq_data *data)
-{
-	struct sc6601_info *info = irq_data_get_irq_chip_data(data);
-	mutex_lock(&info->irq_lock);
-}
-
-static void sc6601_irq_sync_unlock(struct irq_data *data)
-{
-	struct sc6601_info *info = irq_data_get_irq_chip_data(data);
-	regmap_bulk_write(info->regmap, SC6601_REG_HK_IRQ_MASK, &info->irq_mask, 1);
-	mutex_unlock(&info->irq_lock);
-}
-
-static void sc6601_irq_enable(struct irq_data *data)
-{
-	struct sc6601_info *info = irq_data_get_irq_chip_data(data);
-
-	info->irq_mask &= ~BIT(data->hwirq);
-}
-
-static void sc6601_irq_disable(struct irq_data *data)
-{
-	struct sc6601_info *info = irq_data_get_irq_chip_data(data);
-
-	info->irq_mask |= BIT(data->hwirq);
-}
-
-static int sc6601_irq_map(struct irq_domain *h, unsigned int virq,
-						   irq_hw_number_t hwirq)
-{
-	struct sc6601_info *info = h->host_data;
-	irq_set_chip_data(virq, info);
-	irq_set_chip(virq, &info->irq_chip);
-	irq_set_nested_thread(virq, 1);
-	irq_set_parent(virq, info->i2c->irq);
-	irq_set_noprobe(virq);
-	return 0;
-}
-
-static const struct irq_domain_ops sc6601_domain_ops = {
-	.map = sc6601_irq_map,
-	.xlate = irq_domain_xlate_onetwocell,
-};
-
-static irqreturn_t sc6601_irq_thread(int irq, void *data)
-{
-	struct sc6601_info *info = data;
-	u8 evt = 0;
-	bool handle = false;
-	int i, ret;
-
-	pm_stay_awake(&info->i2c->dev);
-
-	ret = regmap_bulk_read(info->regmap, SC6601_REG_HK_IRQ, &evt, 1);
-	if (ret) {
-		dev_err(&info->i2c->dev, "failed to read irq event\n");
-		return IRQ_HANDLED;
-	}
-
-	evt |= BIT(SC6601_IRQ_HK);
-
-	evt &= ~(info->irq_mask);
-
-	for (i = 0; i < SC6601_IRQ_MAX; i++) {
-		if(evt & BIT(i)) {
-			handle_nested_irq(irq_find_mapping(info->irq_domain, i));
-			handle = true;
-		}
-	}
-
-	pm_relax(&info->i2c->dev);
-	return handle ? IRQ_HANDLED : IRQ_NONE;
-}
-
-static int sc6601_add_irq_chip(struct sc6601_info *info)
-{
-	int ret = 0;
-	int val;
-
-	ret = regmap_bulk_read(info->regmap, SC6601_REG_HK_IRQ, &val, 1);
-	if (ret < 0)
-		return ret;
-
-	info->irq_mask = 0xff;
-
-	ret = regmap_bulk_write(info->regmap, SC6601_REG_HK_IRQ_MASK, &info->irq_mask, 1);
-
-	info->irq_chip.name = dev_name(&info->i2c->dev);
-	info->irq_chip.irq_disable = sc6601_irq_disable;
-	info->irq_chip.irq_enable = sc6601_irq_enable;
-	info->irq_chip.irq_bus_lock = sc6601_irq_lock;
-	info->irq_chip.irq_bus_sync_unlock = sc6601_irq_sync_unlock;
-
-	info->irq_domain = irq_domain_add_linear(info->i2c->dev.of_node,
-						SC6601_IRQ_MAX, &sc6601_domain_ops, info);
-	if (!info->irq_domain) {
-		dev_err(&info->i2c->dev, "failed to create irq domain\n");
-		return -ENOMEM;
-	}
-
-	ret = devm_request_threaded_irq(&info->i2c->dev, info->i2c->irq,
-							NULL, sc6601_irq_thread,
-							IRQF_TRIGGER_RISING | IRQF_ONESHOT, dev_name(&info->i2c->dev), info);
-	if (ret) {
-		dev_err(&info->i2c->dev, "failed to request irq %d for %s\n", info->i2c->irq, dev_name(&info->i2c->dev));
-		irq_domain_remove(info->irq_domain);
-		return ret;
-	}
-
-	return 0;
-}
-
-static int sc6601_check_did(struct sc6601_info *info)
+static int sc6601_check_device_id(struct device *dev, struct regmap *rmap)
 {
 	int ret;
-	u8 did = 0;
+	unsigned int device_id;
 
-	ret = regmap_bulk_read(info->regmap, SC6601_REG_HK_DID, &did, 1);
+	ret = regmap_read(rmap, SC6601_REG_HK_DID, &device_id);
 	if (ret)
 		return ret;
 
-	if (did == SC6601_DEVICE_ID) {
-		dev_info(&info->i2c->dev, "SC6601 detected\n");
-	} else if (did == SC6601_1P1_DEVICE_ID) {
-		dev_info(&info->i2c->dev, "SC6601 1P1 detected\n");
-	} else {
+	switch (device_id) {
+	case SC6601_DEVICE_ID:
+	case SC6601_1P1_DEVICE_ID:
+		return 0;
+	default:
+		dev_err(dev, "Unknown Device ID 0x%02x\n", device_id);
 		return -ENODEV;
 	}
-
-	return 0;
 }
 
 static int sc6601_probe(struct i2c_client *i2c)
 {
 	struct sc6601_info *info;
 	struct device *dev = &i2c->dev;
+	struct i2c_client *tcpc_i2c;
+	struct regmap *regmap;
 	int ret;
+
+	dev_err(dev, "probing!\n");
 
 	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
 	if (!info)
 		return -ENOMEM;
 
-	info->i2c = i2c;
+	tcpc_i2c = devm_i2c_new_dummy_device(dev, i2c->adapter,
+					     SC6601_TCPC_I2CADDR);
+	if (IS_ERR(tcpc_i2c))
+		return dev_err_probe(dev, PTR_ERR(tcpc_i2c),
+				     "Failed to register TCPC I2C client\n");
 
-	info->regmap = devm_regmap_init(dev, &sc6601_regmap_bus,
+	info->i2c[SC6601_CHARGER_I2C] = i2c;
+	info->i2c[SC6601_TCPC_I2C] = tcpc_i2c;
+
+	regmap = devm_regmap_init(dev, &sc6601_regmap_bus,
 				  info, &sc6601_regmap_config);
-	if (IS_ERR(info->regmap))
-		return dev_err_probe(dev, PTR_ERR(info->regmap),
+	if (IS_ERR(regmap))
+		return dev_err_probe(dev, PTR_ERR(regmap),
 				     "Failed to init regmap\n");
 
-	ret = sc6601_check_did(info);
+	ret = sc6601_check_device_id(dev, regmap);
 	if (ret)
-		return dev_err_probe(dev, ret, "Failed to check chip did info\n");
+		return dev_err_probe(dev, ret, "Failed to check chip device id\n");
 
-	ret = sc6601_add_irq_chip(info);
+	ret = devm_regmap_add_irq_chip(dev, regmap, i2c->irq,
+				       IRQF_ONESHOT, -1, &sc6601_irq_chip,
+				       &info->irq_data);
 	if (ret)
 		return dev_err_probe(dev, ret, "Failed to add irq chip\n");
+
+	dev_err(dev, "add mfd devices!\n");
 
 	return devm_mfd_add_devices(dev, PLATFORM_DEVID_AUTO,
 				    sc6601_devices, ARRAY_SIZE(sc6601_devices),
 				    NULL, 0,
-					info->irq_domain);
+				    regmap_irq_get_domain(info->irq_data));
 }
 
 static const struct of_device_id sc6601_match_table[] = {
 	{ .compatible = "southchip,sc6601" },
-	{}
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, sc6601_match_table);
 

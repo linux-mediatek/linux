@@ -9,6 +9,7 @@
 
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/usb/pd.h>
 #include <dt-bindings/regulator/mediatek,mt6397-regulator.h>
 #include <dt-bindings/pinctrl/mediatek,mt6789-pinfunc.h>
 
@@ -137,6 +138,14 @@
 		compatible = "regulator-fixed";
 		regulator-name = "vsys";
 		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	i2c_vbus: i2c-bus-fixed {
+		compatible = "regulator-fixed";
+		regulator-name = "i2c-vbus";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
 		regulator-boot-on;
 	};
 
@@ -364,6 +373,8 @@
 
 &i2c5 {
 	status = "okay";
+
+	vbus-supply = <&i2c_vbus>;
 	
 	subpmic: sc6601@61 {
 		compatible = "southchip,sc6601";
@@ -378,15 +389,56 @@
 
 			monitored-battery = <&battery>;
 
-			interrupts = <0>, <6>;
-			interrupt-names = "charger", "hourse_keeping";
-
-			sc6601_otg_vbus_vreg: usb-otg-vbus-regulator {
-				regulator-name = "sc6601-otg-vbus";
+			sc6601_vbus_reg: usb-vboost-regulator {
+				regulator-name = "sc6601-usb-vbus";
 				regulator-min-microvolt = <5000000>;
 				regulator-max-microvolt = <5000000>;
 				regulator-min-microamp = <1500000>;
 				regulator-max-microamp = <1500000>;
+			};
+		};
+
+		sc6601_tcpc: sc6601-tcpc {
+			compatible = "southchip,sc6601-tcpc";
+			interrupts-extended = <&pio 26 IRQ_TYPE_LEVEL_LOW>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&sc6601_tcpc_int>;
+
+			connector {
+				compatible = "usb-c-connector";
+				label = "USB-C";
+
+				vbus-supply = <&sc6601_vbus_reg>;
+
+				data-role = "dual";
+				power-role = "dual";
+				try-power-role = "sink";
+
+				op-sink-microwatt = <15000000>;
+
+				source-pdos = <PDO_FIXED(5000, 3000,
+							PDO_FIXED_DUAL_ROLE |
+							PDO_FIXED_USB_COMM |
+							PDO_FIXED_DATA_SWAP)>;
+
+				sink-pdos = <PDO_FIXED(5000, 3000,
+							PDO_FIXED_DUAL_ROLE |
+							PDO_FIXED_USB_COMM |
+							PDO_FIXED_DATA_SWAP)
+							PDO_VAR(5000, 9000, 3000)>;
+
+				/*ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					sc6601_hs_in: port@0 {
+						reg = <0>;
+						endpoint {
+							remote-endpoint = <&usb2_hs_out>;
+						};
+					};
+				};*/
 			};
 		};
 	};
@@ -473,7 +525,6 @@
 };
 
 &pio {
-
 	mmc1_pins_default: mmc1-pins-default-state {
 		pins-clk {
 			pinmux = <PINMUX_GPIO71__FUNC_MSDC1_CLK>;
@@ -518,6 +569,12 @@
 				 <PINMUX_GPIO39__FUNC_SCP_SPI1_CS>,
 				 <PINMUX_GPIO40__FUNC_SCP_SPI1_MO>,
 				 <PINMUX_GPIO41__FUNC_SCP_SPI1_MI>;
+	};
+
+	sc6601_tcpc_int: sc6601-tcpc-int-pin {
+		pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
+		bias-pull-up;
+		input-enable;
 	};
 };
 

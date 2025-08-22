@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (C) 2025 Arseniy Velikanov <me@adomerle.pw>
+ */
 
 #include <linux/bitfield.h>
 #include <linux/bits.h>
@@ -17,74 +20,76 @@
 #include <linux/regulator/driver.h>
 #include <linux/workqueue.h>
 
-#define SC6601_REG_VAC_VBUS_OVP		0x04
-#define SC6601_REG_HK_CTRL			0x07
-#define SC6601_REG_HK_CTRL1			0x08
-#define SC6601_REG_HK_INT_STAT		0x09
-#define SC6601_REG_HK_INT_FLG		0x0a
-#define SC6601_REG_HK_INT_MASK		0x0b
-#define SC6601_REG_HK_FLT_STAT		0x0c
-#define SC6601_REG_HK_FLT_FLG		0x0d
-#define SC6601_REG_HK_FLT_MASK		0x0e
-#define	SC6601_REG_HK_ADC_CTRL		0x0f
-#define SC6601_REG_HK_ADC			0x11
-#define SC6601_REG_VSYS_MIN			0x30
-#define SC6601_REG_VBAT				0x31
-#define SC6601_REG_ICHG_CC			0x32
-#define SC6601_REG_VINDPM			0x33
-#define SC6601_REG_IINDPM			0x34
-#define SC6601_REG_ICO_CTRL			0x35
-#define SC6601_REG_RECHARGE_CTRL	0x38
-#define SC6601_REG_VBOOST_CTRL		0x39
-#define SC6601_REG_PROTECTION_DIS	0x3a
-#define SC6601_REG_RESET_CTRL		0x3b
-#define SC6601_REG_CHG_CTRL			0x3c
-#define SC6601_REG_CHG_CTRL1		0x3d
-#define SC6601_REG_CHG_CTRL4		0x40
-#define SC6601_REG_CHG_INT_STAT		0x41
-#define SC6601_REG_CHG_INT_STAT1	0x42
-#define SC6601_REG_CHG_INT_FLG		0x44
-#define SC6601_REG_CHG_INT_MASK		0x47
-#define SC6601_REG_CHG_FLT_STAT		0x50
-#define SC6601_REG_CHG_FLT_FLG		0x52
-#define SC6601_REG_CHG_FLT_MASK		0x54
-#define SC6601_REG_JEITA_TEMP		0x56
-#define SC6601_REG_DPDM_EN			0x90
-#define SC6601_REG_DPDM_CTRL		0x91
-#define SC6601_REG_DPDM_QC_CTRL		0x92
-#define SC6601_REG_DPDM_TFCP_CTRL	0x93
-#define SC6601_REG_DPDM_INT_FLAG	0x94
-#define SC6601_REG_DPDM_INT_MASK	0x95
-#define SC6601_REG_QC3_INT_FLAG		0x96
-#define SC6601_REG_QC3_INT_MASK		0x97
-#define SC6601_REG_DP_STAT			0x98
-#define SC6601_REG_DM_STAT			0x99
-#define Sc6601_REG_DPDM_INTERNAL	0x9a
-#define SC6601_REG_DPDM_CTRL2		0x9d
-#define SC6601_REG_DPDM_NONSTD_STAT	0x9e
+#define SC6601_REG_VAC_VBUS_OVP		0x104
+#define SC6601_REG_HK_CTRL		0x107
+#define SC6601_REG_HK_CTRL1		0x108
+#define SC6601_REG_HK_INT_STAT		0x109
+#define SC6601_REG_HK_INT_FLG		0x10a
+#define SC6601_REG_HK_INT_MASK		0x10b
+#define SC6601_REG_HK_FLT_STAT		0x10c
+#define SC6601_REG_HK_FLT_FLG		0x10d
+#define SC6601_REG_HK_FLT_MASK		0x10e
+#define	SC6601_REG_HK_ADC_CTRL		0x10f
+#define SC6601_REG_HK_ADC		0x111
+#define SC6601_REG_VSYS_MIN		0x130
+#define SC6601_REG_VBAT			0x131
+#define SC6601_REG_ICHG_CC		0x132
+#define SC6601_REG_VINDPM		0x133
+#define SC6601_REG_IINDPM		0x134
+#define SC6601_REG_ICO_CTRL		0x135
+#define SC6601_REG_RECHARGE_CTRL	0x138
+#define SC6601_REG_VBOOST_CTRL		0x139
+#define SC6601_REG_PROTECTION_DIS	0x13a
+#define SC6601_REG_RESET_CTRL		0x13b
+#define SC6601_REG_CHG_CTRL		0x13c
+#define SC6601_REG_CHG_CTRL1		0x13d
+#define SC6601_REG_CHG_CTRL4		0x140
+#define SC6601_REG_CHG_INT_STAT		0x141
+#define SC6601_REG_CHG_INT_STAT1	0x142
+#define SC6601_REG_CHG_INT_FLG		0x144
+#define SC6601_REG_CHG_INT_MASK		0x147
+#define SC6601_REG_CHG_FLT_STAT		0x150
+#define SC6601_REG_CHG_FLT_FLG		0x152
+#define SC6601_REG_CHG_FLT_MASK		0x154
+#define SC6601_REG_JEITA_TEMP		0x156
+#define SC6601_REG_DPDM_EN		0x190
+#define SC6601_REG_DPDM_CTRL		0x191
+#define SC6601_REG_DPDM_QC_CTRL		0x192
+#define SC6601_REG_DPDM_TFCP_CTRL	0x193
+#define SC6601_REG_DPDM_INT_FLAG	0x194
+#define SC6601_REG_DPDM_INT_MASK	0x195
+#define SC6601_REG_QC3_INT_FLAG		0x196
+#define SC6601_REG_QC3_INT_MASK		0x197
+#define SC6601_REG_DP_STAT		0x198
+#define SC6601_REG_DM_STAT		0x199
+#define Sc6601_REG_DPDM_INTERNAL	0x19a
+#define SC6601_REG_DPDM_CTRL2		0x19d
+#define SC6601_REG_DPDM_NONSTD_STAT	0x19e
 
-#define SC6601_OTG_VBOOST_MIN	3900000
-#define SC6601_OTG_VBOOST_MAX	5800000
-#define SC6601_OTG_VBOOST_STEP	100
-#define SC6601_OTG_IBOOST_MIN	500000
-#define SC6601_OTG_IBOOST_MAX	3250000
+#define SC6601_VBOOST_MIN		3900000
+#define SC6601_VBOOST_MAX		5800000
+#define SC6601_VBOOST_STEP		100
+#define SC6601_IBOOST_MIN		500000
+#define SC6601_IBOOST_MAX		3250000
 
-#define SC6601_ADC_CHAN_IBUS	0
-#define SC6601_ADC_CHAN_VBUS	1
-#define SC6601_ADC_CHAN_VBAT	3
-#define SC6601_ADC_CHAN_IBAT	5
+#define SC6601_BUCK_VBAT_OFFSET		3840
+#define SC6601_BUCK_IINDPM_OFFSET	100
+#define SC6601_BUCK_VBAT_STEP		8
+#define SC6601_BUCK_ICHG_STEP		50
+#define SC6601_BUCK_IINDPM_STEP		50
+#define SC6601_BUCK_IINDPM_MAX		3250
+#define SC6601_BUCK_ICHG_MAX		3600
+#define SC6601_BUCK_IINDPM_MIN		100
 
-#define SC6601_BUCK_VBAT_OFFSET	3840
-#define SC6601_BUCK_VBAT_STEP	8
-#define SC6601_BUCK_ICHG_STEP	50
-#define SC6601_BUCK_ICHG_MAX	3600
 
 static const int sc6601_boost_curr_range[] = {
-	500000, 900000, 1300000, 1500000, 2100000, 2500000, 2900000, 3250000,
+	500000, 900000, 1300000, 1500000,
+	2100000, 2500000, 2900000, 3250000,
 };
 
 static const int sc6601_wd_range[] = {
-	0, 500, 1000, 2000, 20000, 40000, 80000, 160000,
+	0, 500, 1000, 2000, 20000,
+	40000, 80000, 160000,
 };
 
 enum sc6601_chg_reg_field {
@@ -137,16 +142,20 @@ enum sc6601_irq {
 	SC6601_IRQ_MAX
 };
 
+enum {
+	SC6601_ADC_CHAN_IBUS,
+	SC6601_ADC_CHAN_VBUS,
+	SC6601_ADC_CHAN_VBAT,
+	SC6601_ADC_CHAN_IBAT
+};
+
 struct sc6601_priv {
 	struct device *dev;
-	struct iio_channel *iio_adcs;
 	struct power_supply *psy;
 	struct regmap *regmap;
 	struct regmap_field *rmap_fields[F_MAX];
 	struct regulator_dev *rdev;
-	struct workqueue_struct *wq;
-	unsigned int irq[SC6601_IRQ_MAX];
-
+	unsigned int irq_nums[SC6601_IRQ_MAX];
 	bool online;
 };
 
@@ -372,8 +381,8 @@ static const struct power_supply_desc sc6601_chg_psy_desc = {
 	.set_property = sc6601_chg_set_property,
 	.property_is_writeable = sc6601_chg_property_is_writeable,
 	.usb_types = BIT(POWER_SUPPLY_USB_TYPE_SDP) |
-				 BIT(POWER_SUPPLY_USB_TYPE_DCP) |
-				 BIT(POWER_SUPPLY_USB_TYPE_UNKNOWN),
+		     BIT(POWER_SUPPLY_USB_TYPE_DCP) |
+		     BIT(POWER_SUPPLY_USB_TYPE_UNKNOWN),
 };
 
 static int sc6601_vboost_ctrl(struct sc6601_priv *priv, bool en)
@@ -408,21 +417,21 @@ static int sc6601_vboost_ctrl(struct sc6601_priv *priv, bool en)
 	return 0;
 }
 
-static int sc6601_vbus_enable(struct regulator_dev *rdev)
+static int sc6601_vboost_enable(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 
 	return sc6601_vboost_ctrl(priv, 1);
 }
 
-static int sc6601_vbus_disable(struct regulator_dev *rdev)
+static int sc6601_vboost_disable(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 
 	return sc6601_vboost_ctrl(priv, 0);
 }
 
-static int sc6601_vbus_is_enabled(struct regulator_dev *rdev)
+static int sc6601_vboost_is_enabled(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 	int ret, vboost;
@@ -434,7 +443,7 @@ static int sc6601_vbus_is_enabled(struct regulator_dev *rdev)
 	return vboost;
 }
 
-static int sc6601_vbus_get_voltage(struct regulator_dev *rdev)
+static int sc6601_vboost_get_voltage(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 	int ret, vboost;
@@ -445,28 +454,30 @@ static int sc6601_vbus_get_voltage(struct regulator_dev *rdev)
 		return ret;
 	}
 
-	return (vboost * SC6601_OTG_VBOOST_STEP) * 1000;
+	return (vboost * SC6601_VBOOST_STEP) * 1000;
 }
 
-static int sc6601_vbus_set_voltage(struct regulator_dev *rdev,
-					int min_uV, int max_uV, unsigned *selector)
+static int sc6601_vboost_set_voltage(struct regulator_dev *rdev,
+				     int min_uV, int max_uV, unsigned *selector)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 
 	int ret;
-	int uv = max_uV;
-	if (max_uV > SC6601_OTG_VBOOST_MAX)
-		uv = SC6601_OTG_VBOOST_MAX;
+	int uV = max_uV;
+	if (max_uV < SC6601_VBOOST_MIN)
+		uV = SC6601_VBOOST_MIN;
+	if (max_uV > SC6601_VBOOST_MAX)
+		uV = SC6601_VBOOST_MAX;
 
-	uv = (uv / 1000) / SC6601_OTG_VBOOST_STEP;
+	uV = (uV / 1000) / SC6601_VBOOST_STEP;
 
-	ret = sc6601_chg_field_set(priv, F_VBOOST, uv);
+	ret = sc6601_chg_field_set(priv, F_VBOOST, uV);
 	if (ret)
 		dev_err(priv->dev, "failed to set vboost voltage!");
 	return ret;
 }
 
-static int sc6601_vbus_get_current(struct regulator_dev *rdev)
+static int sc6601_vboost_get_current(struct regulator_dev *rdev)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 	int ret, iboost;
@@ -480,24 +491,23 @@ static int sc6601_vbus_get_current(struct regulator_dev *rdev)
 	return sc6601_boost_curr_range[iboost];
 }
 
-static int sc6601_vbus_set_current(struct regulator_dev *rdev,
-								   int min_uA, int max_uA)
+static int sc6601_vboost_set_current(struct regulator_dev *rdev,
+				     int min_uA, int max_uA)
 {
 	struct sc6601_priv *priv = rdev_get_drvdata(rdev);
 
-	int ret, ua;
+	int ret, uA;
 	int i;
 
-	if (max_uA < sc6601_boost_curr_range[0]) {
-		ua = sc6601_boost_curr_range[0];
-	} else if (max_uA > sc6601_boost_curr_range[ARRAY_SIZE(sc6601_boost_curr_range) - 1]) {
-		ua = sc6601_boost_curr_range[ARRAY_SIZE(sc6601_boost_curr_range) - 1];
-	} else {
-		ua = max_uA;
-	}
+	if (max_uA < sc6601_boost_curr_range[0])
+		uA = sc6601_boost_curr_range[0];
+	else if (max_uA > sc6601_boost_curr_range[ARRAY_SIZE(sc6601_boost_curr_range) - 1])
+		uA = sc6601_boost_curr_range[ARRAY_SIZE(sc6601_boost_curr_range) - 1];
+	else
+		uA = max_uA;
 
 	for (i = 0; i <= ARRAY_SIZE(sc6601_boost_curr_range) - 1; i++) {
-		if (ua < sc6601_boost_curr_range[i])
+		if (uA < sc6601_boost_curr_range[i])
 			break;
 	}
 
@@ -507,20 +517,20 @@ static int sc6601_vbus_set_current(struct regulator_dev *rdev,
 	return ret;
 }
 
-static const struct regulator_ops sc6601_chg_otg_ops = {
-	.enable = sc6601_vbus_enable,
-	.disable = sc6601_vbus_disable,
-	.is_enabled = sc6601_vbus_is_enabled,
-	.get_voltage = sc6601_vbus_get_voltage,
-	.set_voltage = sc6601_vbus_set_voltage,
-	.set_current_limit = sc6601_vbus_set_current,
-	.get_current_limit = sc6601_vbus_get_current
+static const struct regulator_ops sc6601_vboost_reg_ops = {
+	.enable = sc6601_vboost_enable,
+	.disable = sc6601_vboost_disable,
+	.is_enabled = sc6601_vboost_is_enabled,
+	.get_voltage = sc6601_vboost_get_voltage,
+	.set_voltage = sc6601_vboost_set_voltage,
+	.set_current_limit = sc6601_vboost_set_current,
+	.get_current_limit = sc6601_vboost_get_current
 };
 
-static const struct regulator_desc sc6601_chg_otg_rdesc = {
-	.of_match = "usb-otg-vbus-regulator",
-	.name = "sc6601-usb-otg-vbus",
-	.ops = &sc6601_chg_otg_ops,
+static const struct regulator_desc sc6601_chg_vboost_rdesc = {
+	.of_match = "usb-vboost-regulator",
+	.name = "sc6601-usb-vboost",
+	.ops = &sc6601_vboost_reg_ops,
 	.owner = THIS_MODULE,
 	.type = REGULATOR_VOLTAGE,
 };
@@ -544,7 +554,7 @@ static int sc6601_chg_init_rmap_fields(struct sc6601_priv *priv)
 	return 0;
 }
 
-static int sc6601_chg_set_wd_timeout(struct sc6601_priv *priv, int ms)
+static int sc6601_chg_set_watchdog_timeout(struct sc6601_priv *priv, int ms)
 {
 	int i = 0;
 	if (ms < sc6601_wd_range[0]) {
@@ -587,11 +597,6 @@ static int sc6601_chg_acdrv_ctrl(struct sc6601_priv *priv, bool en)
 	return 0;
 }
 
-#define SC6601_BUCK_IINDPM_MIN		100
-#define SC6601_BUCK_IINDPM_MAX		3250
-#define SC6601_BUCK_IINDPM_STEP		50
-#define SC6601_BUCK_IINDPM_OFFSET	100
-
 static int sc6601_set_input_current_limit(struct sc6601_priv *priv, int ma)
 {
 	if (ma < SC6601_BUCK_IINDPM_MIN)
@@ -623,7 +628,7 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	regmap_bulk_write(priv->regmap, SC6601_REG_CHG_CTRL4, &val, 1);
 
 	sc6601_chg_field_set(priv, F_CHG_EN, 1);
-	sc6601_chg_set_wd_timeout(priv, 0);
+	sc6601_chg_set_watchdog_timeout(priv, 0);
 
 	// 14000 mV
 	sc6601_chg_field_set(priv, F_VAC_OVP, 4);
@@ -661,7 +666,7 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	sc6601_chg_field_set(priv, F_ICHG_CC, bat_ma);
 
 	sc6601_chg_field_set(priv, F_IINDPM_DIS, 0);
-	sc6601_set_input_current_limit(priv, 3000);
+	sc6601_set_input_current_limit(priv, 500);
 
 	// recharge after 100mV
 	sc6601_chg_field_set(priv, F_RECHG_DG, 0);
@@ -689,12 +694,12 @@ static int sc6601_chg_init_setting(struct sc6601_priv *priv)
 	sc6601_chg_field_set(priv, F_ADC_EN, 1);
 
 	val = 0xb0;
-	regmap_bulk_write(priv->regmap, 0x60, &val, 1);
+	regmap_bulk_write(priv->regmap, 0x160, &val, 1);
 
 	return 0;
 }
 
-static int sc6601_chg_init_otg_regulator(struct sc6601_priv *priv)
+static int sc6601_chg_init_vboost_regulator(struct sc6601_priv *priv)
 {
 	struct regulator_config rcfg = {
 		.dev = priv->dev,
@@ -702,7 +707,7 @@ static int sc6601_chg_init_otg_regulator(struct sc6601_priv *priv)
 		.driver_data = priv,
 	};
 
-	priv->rdev = devm_regulator_register(priv->dev, &sc6601_chg_otg_rdesc,
+	priv->rdev = devm_regulator_register(priv->dev, &sc6601_chg_vboost_rdesc,
 					     &rcfg);
 
 	return PTR_ERR_OR_ZERO(priv->rdev);
@@ -721,12 +726,14 @@ static int sc6601_chg_init_psy(struct sc6601_priv *priv)
 	return PTR_ERR_OR_ZERO(priv->psy);
 }
 
-static irqreturn_t sc6601_chg_irq_charger(int irq, void *data)
+static irqreturn_t sc6601_chg_charger_irq_handler(int irq, void *data)
 {
 	struct sc6601_priv *priv = data;
 	u8 val[3];
 	u32 flt, state;
 	int ret;
+
+	dev_err(priv->dev, "charger irq happen!\n");
 
 	ret = regmap_bulk_read(priv->regmap, SC6601_REG_CHG_FLT_FLG, &val, 2);
 	flt = val[0] + (val[1] << 8);
@@ -754,7 +761,7 @@ static int sc6601_chg_check_hk(struct sc6601_priv *priv)
 	return ret;
 }
 
-static irqreturn_t sc6601_chg_irq_hk(int irq, void *data)
+static irqreturn_t sc6601_chg_hourse_keeping_irq_handler(int irq, void *data)
 {
 	struct sc6601_priv *priv = data;
 	u8 val;
@@ -771,40 +778,38 @@ static irqreturn_t sc6601_chg_irq_hk(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+#define SC6601_CHG_IRQ(_name)						\
+{									\
+	.name = #_name,							\
+	.handler = sc6601_chg_##_name##_irq_handler,			\
+}
+
 static int sc6601_chg_init_irq(struct sc6601_priv *priv)
 {
-	int ret;
+	int i, ret;
+	const struct {
+		char *name;
+		irq_handler_t handler;
+	} sc6601_chg_irqs[] = {
+		SC6601_CHG_IRQ(charger),
+		SC6601_CHG_IRQ(hourse_keeping),
+	};
 
-	ret = platform_get_irq_byname(to_platform_device(priv->dev), "charger");
-	if (ret < 0) {
-		dev_err(priv->dev, "failed to get charger irq\n");
-		return ret;
-	}
+	for (i = 0; i < ARRAY_SIZE(sc6601_chg_irqs); i++) {
+		ret = platform_get_irq_byname(to_platform_device(priv->dev),
+					      sc6601_chg_irqs[i].name);
+		if (ret < 0)
+			return ret;
 
-	priv->irq[0] = ret;
-
-	ret = devm_request_threaded_irq(priv->dev, ret, NULL,
-					sc6601_chg_irq_charger, IRQF_ONESHOT,
-					dev_name(priv->dev), priv);
-	if (ret < 0) {
-		dev_err(priv->dev, "failed to request charger irq\n");
-		return ret;
-	}
-
-	ret = platform_get_irq_byname(to_platform_device(priv->dev), "hourse_keeping");
-	if (ret < 0) {
-		dev_err(priv->dev, "failed to get charger irq\n");
-		return ret;
-	}
-
-	priv->irq[1] = ret;
-
-	ret = devm_request_threaded_irq(priv->dev, ret, NULL,
-								sc6601_chg_irq_hk, IRQF_ONESHOT,
-								dev_name(priv->dev), priv);
-	if (ret < 0) {
-		dev_err(priv->dev, "failed to request hourse keeping irq\n");
-		return ret;
+		priv->irq_nums[i] = ret;
+		ret = devm_request_threaded_irq(priv->dev, ret, NULL,
+						sc6601_chg_irqs[i].handler,
+						IRQF_ONESHOT,
+						dev_name(priv->dev), priv);
+		if (ret)
+			return dev_err_probe(priv->dev, ret,
+					     "Failed to request irq %s\n",
+					     sc6601_chg_irqs[i].name);
 	}
 
 	return 0;
@@ -815,6 +820,8 @@ static int sc6601_chg_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct sc6601_priv *priv;
 	int ret;
+
+	dev_err(dev, "probing!\n");
 
 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
@@ -843,12 +850,14 @@ static int sc6601_chg_probe(struct platform_device *pdev)
 				     "Failed to init sc6601 charger setting\n");
 
 	ret = sc6601_chg_init_irq(priv);
-	if (ret)
+	if (ret) {
+		dev_err(dev, "Failed to init interrupts!\n");
 		return ret;
+	}
 
-	ret = sc6601_chg_init_otg_regulator(priv);
+	ret = sc6601_chg_init_vboost_regulator(priv);
 	if (ret)
-		return dev_err_probe(dev, ret, "Failed to init OTG regulator\n");
+		return dev_err_probe(dev, ret, "Failed to init vboost regulator\n");
 
 	sc6601_chg_check_hk(priv);
 
@@ -857,7 +866,7 @@ static int sc6601_chg_probe(struct platform_device *pdev)
 
 static const struct of_device_id sc6601_chg_of_match[] = {
 	{ .compatible = "southchip,sc6601-charger", },
-	{}
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, sc6601_chg_of_match);
 
