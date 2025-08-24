@@ -1084,10 +1084,126 @@
 			#clock-cells = <1>;
 		};
 
-		afe: syscon@11210000 {
+		audsys: syscon@11210000 {
 			compatible = "mediatek,mt6789-afe", "syscon";
 			reg = <0 0x11210000 0 0x1000>;
 			#clock-cells = <1>;
+
+			afe: mt6789-afe-pcm {
+				compatible = "mediatek,mt6789-sound";
+				interrupts = <GIC_SPI 202 IRQ_TYPE_LEVEL_HIGH &ppi_cluster0>;
+				mediatek,apmixedsys = <&apmixedsys>;
+				mediatek,infracfg = <&infracfg_ao>;
+				mediatek,topckgen = <&topckgen>;
+				power-domains = <&spm MT6789_POWER_DOMAIN_AUDIO>;
+
+				clocks = <&audsys CLK_AFE_AFE>,
+					 <&audsys CLK_AFE_DAC>,
+					 <&audsys CLK_AFE_DAC_PREDIS>,
+					 <&audsys CLK_AFE_ADC>,
+					 <&audsys CLK_AFE_22M>,
+					 <&audsys CLK_AFE_24M>,
+					 <&audsys CLK_AFE_APLL_TUNER>,
+					 <&audsys CLK_AFE_APLL2_TUNER>,
+					 <&audsys CLK_AFE_TML>,
+					 <&audsys CLK_AFE_NLE>,
+					 <&audsys CLK_AFE_DAC_HIRES>,
+					 <&audsys CLK_AFE_ADC_HIRES>,
+					 <&audsys CLK_AFE_ADC_HIRES_TML>,
+					 <&audsys CLK_AFE_I2S1_BCLK>,
+					 <&audsys CLK_AFE_I2S2_BCLK>,
+					 <&audsys CLK_AFE_I2S3_BCLK>,
+					 <&audsys CLK_AFE_I2S4_BCLK>,
+					 <&audsys CLK_AFE_GENERAL3_ASRC>,
+					 <&audsys CLK_AFE_CONNSYS_I2S_ASRC>,
+					 <&audsys CLK_AFE_GENERAL1_ASRC>,
+					 <&audsys CLK_AFE_GENERAL2_ASRC>,
+					 <&infracfg_ao CLK_IFRAO_AUDIO>,
+					 <&infracfg_ao CLK_IFRAO_AUDIO_26M_BCLK>,
+					 <&apmixedsys CLK_APMIXED_APLL1>,
+					 <&apmixedsys CLK_APMIXED_APLL2>,
+					 <&topckgen CLK_TOP_AUDIO_SEL>,
+					 <&topckgen CLK_TOP_AUD_INTBUS_SEL>,
+					 <&topckgen CLK_TOP_MAINPLL_D4_D4>,
+					 <&topckgen CLK_TOP_AUD_1_SEL>,
+					 <&topckgen CLK_TOP_APLL1>,
+					 <&topckgen CLK_TOP_AUD_2_SEL>,
+					 <&topckgen CLK_TOP_APLL2>,
+					 <&topckgen CLK_TOP_AUD_ENGEN1_SEL>,
+					 <&topckgen CLK_TOP_APLL1_D4>,
+					 <&topckgen CLK_TOP_APLL1_D8>,
+					 <&topckgen CLK_TOP_AUD_ENGEN2_SEL>,
+					 <&topckgen CLK_TOP_APLL2_D4>,
+					 <&topckgen CLK_TOP_APLL2_D8>,
+					 <&topckgen CLK_TOP_APLL_I2S0_MCK_SEL>,
+					 <&topckgen CLK_TOP_APLL_I2S1_MCK_SEL>,
+					 <&topckgen CLK_TOP_APLL_I2S2_MCK_SEL>,
+					 <&topckgen CLK_TOP_APLL_I2S3_MCK_SEL>,
+					 <&topckgen CLK_TOP_APLL_I2S4_MCK_SEL>,
+					 <&topckgen CLK_TOP_APLL_I2S5_MCK_SEL>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIV0>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIV1>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIV2>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIV3>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIV4>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIVB>,
+					 <&topckgen CLK_TOP_APLL12_CK_DIV5>,
+					 <&topckgen CLK_TOP_AUDIO_H_SEL>,
+					 <&topckgen CLK_TOP_TCK_26M_MX9>;
+
+			clock-names = "aud_audsys",
+				      "aud_dac_clk",
+				      "aud_dac_predis_clk",
+				      "aud_adc_clk",
+				      "aud_apll22m_clk",
+				      "aud_apll24m_clk",
+				      "aud_apll1_tuner_clk",
+				      "aud_apll2_tuner_clk",
+				      "aud_tml_clk",
+				      "aud_nle",
+				      "aud_dac_hires_clk",
+				      "aud_adc_hires_clk",
+				      "aud_adc_hires_tml",
+				      "aud_i2s1_bclk",
+				      "aud_i2s2_bclk",
+				      "aud_i2s3_bclk",
+				      "aud_i2s4_bclk",
+				      "aud_general3_asrc",
+				      "aud_connsys_i2s_asrc",
+				      "aud_general1_asrc",
+				      "aud_general2_asrc","aud_infra_clk",
+				      "aud_infra_26m_clk",
+				      "aud_clk_apmixed_apll1",
+				      "aud_clk_apmixed_apll2",
+				      "top_mux_audio",
+				      "top_mux_audio_int",
+				      "top_mainpll_d4_d4",
+				      "top_mux_aud_1",
+				      "top_apll1_ck",
+				      "top_mux_aud_2",
+				      "top_apll2_ck",
+				      "top_mux_aud_eng1",
+				      "top_apll1_d4",
+				      "top_apll1_d8",
+				      "top_mux_aud_eng2",
+				      "top_apll2_d4",
+				      "top_apll2_d8",
+				      "top_i2s0_m_sel",
+				      "top_i2s1_m_sel",
+				      "top_i2s2_m_sel",
+				      "top_i2s3_m_sel",
+				      "top_i2s4_m_sel",
+				      "top_i2s5_m_sel",
+				      "top_apll12_div0",
+				      "top_apll12_div1",
+				      "top_apll12_div2",
+				      "top_apll12_div3",
+				      "top_apll12_div4",
+				      "top_apll12_divb",
+				      "top_apll12_div5",
+				      "top_mux_audio_h",
+				      "top_clk26m_clk";
+			};
 		};
 
 		mfgcfg: syscon@13fbf000 {
