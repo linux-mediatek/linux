@@ -19,6 +19,7 @@ properties:
       - enum:
           - mediatek,mt2701-smi-larb
           - mediatek,mt2712-smi-larb
+          - mediatek,mt6765-smi-larb
           - mediatek,mt6779-smi-larb
           - mediatek,mt6795-smi-larb
           - mediatek,mt6893-smi-larb
