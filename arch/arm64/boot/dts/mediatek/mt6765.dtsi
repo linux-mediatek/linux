@@ -10,7 +10,7 @@
 #include <dt-bindings/thermal/thermal.h>
 
 #include <dt-bindings/clock/mt6765-clk.h>
-#include <dt-bindings/gce/mediatek,mt6765-gce.h>
+#include <dt-bindings/mailbox/mediatek,mt6765-gce.h>
 #include <dt-bindings/memory/mt6765-larb-port.h>
 #include <dt-bindings/power/mediatek,mt6765-power.h>
 #include <dt-bindings/reset/mediatek,mt6765-resets.h>
@@ -362,16 +362,19 @@
 				power-domain@MT6765_POWER_DOMAIN_MD1 {
 					reg = <MT6765_POWER_DOMAIN_MD1>;
 					#power-domain-cells = <0>;
+					mediatek,infracfg = <&infracfg>;
 				};
 
 				power-domain@MT6765_POWER_DOMAIN_CONN {
 					reg = <MT6765_POWER_DOMAIN_CONN>;
 					#power-domain-cells = <0>;
+					mediatek,infracfg = <&infracfg>;
 				};
 
 				power-domain@MT6765_POWER_DOMAIN_DPY {
 					reg = <MT6765_POWER_DOMAIN_DPY>;
 					#power-domain-cells = <0>;
+					mediatek,infracfg = <&infracfg>;
 				};
 
 				power-domain@MT6765_POWER_DOMAIN_DISP {
@@ -379,6 +382,7 @@
 					#address-cells = <1>;
 					#size-cells = <0>;
 					#power-domain-cells = <1>;
+					mediatek,infracfg = <&infracfg>;
 
 					clocks = <&topckgen CLK_TOP_MM_SEL>,
 						 <&mmsys CLK_MM_SMI_COMMON>,
@@ -390,6 +394,8 @@
 					power-domain@MT6765_POWER_DOMAIN_ISP {
 						reg = <MT6765_POWER_DOMAIN_ISP>;
 						#power-domain-cells = <0>;
+						mediatek,infracfg = <&infracfg>;
+						mediatek,smi = <&smi_common>;
 
 						clocks = <&imgsys CLK_IMG_LARB2>,
 							 <&mmsys CLK_MM_SMI_IMG>;
@@ -399,6 +405,8 @@
 					power-domain@MT6765_POWER_DOMAIN_CAM {
 						reg = <MT6765_POWER_DOMAIN_CAM>;
 						#power-domain-cells = <0>;
+						mediatek,infracfg = <&infracfg>;
+						mediatek,smi = <&smi_common>;
 
 						clocks = <&camsys CLK_CAM_LARB3>,
 							 <&camsys CLK_CAM_DFP_VAD>,
@@ -437,6 +445,7 @@
 						#address-cells = <1>;
 						#size-cells = <0>;
 						#power-domain-cells = <1>;
+						mediatek,infracfg = <&infracfg>;
 
 						clocks = <&topckgen CLK_TOP_MFG_SEL>;
 						clock-names = "mfg";
@@ -451,8 +460,7 @@
 		};
 
 		watchdog: reset-controller@10007000 {
-			compatible = "mediatek,mt6765-wdt",
-				     "mediatek,mt6589-wdt";
+			compatible = "mediatek,mt6765-wdt";
 			reg = <0 0x10007000 0 0x100>;
 			interrupts = <GIC_SPI 139 IRQ_TYPE_LEVEL_LOW>;
 		};
@@ -504,7 +512,7 @@
 			interrupt-controller;
 		};
 
-		iommu: m4u@10205000 {
+		/*iommu: m4u@10205000 {
 			compatible = "mediatek,mt6765-m4u";
 			reg = <0 0x10205000 0 0x1000>;
 
@@ -514,11 +522,12 @@
 					 <&smi_larb2>, <&smi_larb3>;
 
 			#iommu-cells = <1>;
-		};
+		};*/
 
 
 		gce: mailbox@10238000 {
-			compatible = "mediatek,mt6765-gce";
+			compatible = "mediatek,mt6765-gce",
+						 "mediatek,mt8173-gce";
 			reg = <0 0x10238000 0 0x4000>;
 
 			interrupts = <GIC_SPI 154 IRQ_TYPE_LEVEL_LOW>,
@@ -664,7 +673,7 @@
 			clocks = <&infracfg CLK_IFR_I2C_AP>,
 				 <&infracfg CLK_IFR_AP_DMA>;
 			clock-names = "main", "dma";
-			clock-div = <5>;
+			clock-div = <1>;
 
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -738,7 +747,7 @@
 			clocks = <&infracfg CLK_IFR_I2C_AP>,
 				 <&infracfg CLK_IFR_AP_DMA>;
 			clock-names = "main", "dma";
-			clock-div = <5>;
+			clock-div = <1>;
 
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -866,7 +875,7 @@
 			clocks = <&infracfg CLK_IFR_I2C_AP>,
 				 <&infracfg CLK_IFR_AP_DMA>;
 			clock-names = "main", "dma";
-			clock-div = <5>;
+			clock-div = <1>;
 
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -1036,7 +1045,7 @@
 
 			power-domains = <&spm MT6765_POWER_DOMAIN_DISP>;
 
-			iommus = <&iommu M4U_PORT_DISP_OVL0>;
+			//iommus = <&iommu M4U_PORT_DISP_OVL0>;
 
 			mediatek,gce-client-reg = <&gce SUBSYS_1400XXXX 0xb000 0x1000>;
 		};
@@ -1052,7 +1061,7 @@
 
 			power-domains = <&spm MT6765_POWER_DOMAIN_DISP>;
 
-			iommus = <&iommu M4U_PORT_DISP_OVL0_2L>;
+			//iommus = <&iommu M4U_PORT_DISP_OVL0_2L>;
 
 			mediatek,gce-client-reg = <&gce SUBSYS_1400XXXX 0xc000 0x1000>;
 		};
@@ -1068,7 +1077,7 @@
 
 			power-domains = <&spm MT6765_POWER_DOMAIN_DISP>;
 
-			iommus = <&iommu M4U_PORT_DISP_RDMA0>;
+			//iommus = <&iommu M4U_PORT_DISP_RDMA0>;
 
 			mediatek,gce-client-reg = <&gce SUBSYS_1400XXXX 0xd000 0x1000>;
 		};
@@ -1084,7 +1093,7 @@
 
 			power-domains = <&spm MT6765_POWER_DOMAIN_DISP>;
 
-			iommus = <&iommu M4U_PORT_DISP_WDMA0>;
+			//iommus = <&iommu M4U_PORT_DISP_WDMA0>;
 
 			mediatek,gce-client-reg = <&gce SUBSYS_1400XXXX 0xe000 0x1000>;
 		};

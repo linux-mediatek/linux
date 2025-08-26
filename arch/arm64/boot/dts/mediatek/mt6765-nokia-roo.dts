@@ -18,7 +18,7 @@
 
 / {
 	chassis-type = "handset";
-	compatible = "nokia,roo", "mediatek,mt6762", "mediatek,mt6765";
+	compatible = "nokia,roo", "mediatek,mt6765";
 	model = "Nokia 3.1 Plus";
 
 	aliases {
@@ -27,8 +27,18 @@
 	};
 
 	chosen {
-		stdout-path = "serial0:921600n8";
-		bootargs = "maxcpus=4";
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		simplefb: framebuffer@7bee0000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0x7bee0000 0x0 ((720 + 16) * 1440 * 4)>;
+			width = <720>;
+			height = <1440>;
+			stride = <((720 + 16) * 4)>;
+			format = "a8r8g8b8";
+		};
 	};
 
 	gpio-keys {
@@ -50,26 +60,6 @@
 		haptic-supply = <&mt6357_vibr_reg>;
 		max-microvolt = <2300000>;
 		min-microvolt = <3200000>;
-	};
-
-	/* The following are required by stock bootloader */
-	reserved-memory {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-	};
-
-	scp@10500000 {
-		compatible = "mediatek,scp";
-	};
-
-	gpio@10005000 {
-		linux,phandle = <0xdead>;
-		phandle = <0xdead>;
-	};
-
-	__symbols__ {
-		gpio = "/gpio@10005000";
 	};
 };
 
@@ -140,11 +130,30 @@
 	};
 };
 
+&i2c0 { status = "okay"; };
+&i2c1 { status = "okay"; };
+&i2c2 { status = "okay"; };
+&i2c3 { status = "okay"; };
+&i2c4 { status = "okay"; };
+&i2c6 { status = "okay"; };
+
+&mt6357_vldo28_reg {
+	regulator-boot-on;
+	regulator-always-on;
+};
+
+&mt6357_vio18_reg {
+	regulator-boot-on;
+	regulator-always-on;
+};
+
+&mt6357_vio28_reg {
+	regulator-boot-on;
+	regulator-always-on;
+};
+
 &i2c5 {
 	status = "okay";
-
-	pinctrl-0 = <&i2c5_pins>;
-	pinctrl-names = "default";
 
 	pmic@34 {
 		compatible = "mediatek,mt6370";
@@ -320,14 +329,6 @@
 		};
 	};
 
-	i2c5_pins: i2c5-pins {
-		pins-bus {
-			pinmux = <PINMUX_GPIO48__FUNC_SCL5>,
-				 <PINMUX_GPIO49__FUNC_SDA5>;
-			bias-disable;
-		};
-	};
-
 	mmc0_pins_default: mmc0-pins-default {
 		pins_cmd_dat {
 			pinmux = <PINMUX_GPIO129__FUNC_MSDC0_DAT0>,
@@ -457,6 +458,10 @@
 
 &u2phy {
 	status = "okay";
+};
+
+&u2port {
+	mediatek,software-role-switch;
 };
 
 &uart0 {
