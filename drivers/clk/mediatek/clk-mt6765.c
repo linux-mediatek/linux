@@ -628,6 +628,14 @@ static const struct mtk_gate ifr_clks[] = {
 	GATE_IFR5(CLK_IFR_CCIF3_MD, "ifr_ccif3_md", "axi_ck", 21),
 };
 
+static u16 ifr_rst_ofs[] = { 0x140 };
+
+static const struct mtk_clk_rst_desc ifr_rst_desc = {
+	.version = MTK_RST_SET_CLR,
+	.rst_bank_ofs = ifr_rst_ofs,
+	.rst_bank_nr = ARRAY_SIZE(ifr_rst_ofs),
+};
+
 /* additional CCF control for mipi26M race condition(disp/camera) */
 static const struct mtk_gate_regs apmixed_cg_regs = {
 	.set_ofs = 0x14,
@@ -818,6 +826,8 @@ static int clk_mt6765_ifr_probe(struct platform_device *pdev)
 	mtk_clk_register_gates(&pdev->dev, node, ifr_clks,
 			       ARRAY_SIZE(ifr_clks), clk_data);
 	r = of_clk_add_hw_provider(node, of_clk_hw_onecell_get, clk_data);
+
+	r = mtk_register_reset_controller_with_dev(&pdev->dev, &ifr_rst_desc);
 
 	if (r)
 		pr_err("%s(): could not register clock provider: %d\n",
