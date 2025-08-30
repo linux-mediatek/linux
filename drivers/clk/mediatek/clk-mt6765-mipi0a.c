@@ -23,7 +23,7 @@ static const struct mtk_gate_regs mipi0a_cg_regs = {
 
 static const struct mtk_gate mipi0a_clks[] = {
 	GATE_MIPI0A(CLK_MIPI0A_CSR_CSI_EN_0A,
-		    "mipi0a_csr_0a", "f_fseninf_ck", 1),
+		    "mipi0a_csr_0a", "seninf_sel", 1),
 };
 
 static const struct mtk_clk_desc mipi0a_desc = {
@@ -32,12 +32,8 @@ static const struct mtk_clk_desc mipi0a_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6765_mipi0a[] = {
-	{
-		.compatible = "mediatek,mt6765-mipi0a",
-		.data = &mipi0a_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6765-mipi0a", .data = &mipi0a_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6765_mipi0a);
 

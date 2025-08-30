@@ -22,11 +22,11 @@ static const struct mtk_gate_regs img_cg_regs = {
 	GATE_MTK(_id, _name, _parent, &img_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
 
 static const struct mtk_gate img_clks[] = {
-	GATE_IMG(CLK_IMG_LARB2, "img_larb2", "mm_ck", 0),
-	GATE_IMG(CLK_IMG_DIP, "img_dip", "mm_ck", 2),
-	GATE_IMG(CLK_IMG_FDVT, "img_fdvt", "mm_ck", 3),
-	GATE_IMG(CLK_IMG_DPE, "img_dpe", "mm_ck", 4),
-	GATE_IMG(CLK_IMG_RSC, "img_rsc", "mm_ck", 5),
+	GATE_IMG(CLK_IMG_LARB2, "img_larb2", "mm_sel", 0),
+	GATE_IMG(CLK_IMG_DIP, "img_dip", "mm_sel", 2),
+	GATE_IMG(CLK_IMG_FDVT, "img_fdvt", "mm_sel", 3),
+	GATE_IMG(CLK_IMG_DPE, "img_dpe", "mm_sel", 4),
+	GATE_IMG(CLK_IMG_RSC, "img_rsc", "mm_sel", 5),
 };
 
 static const struct mtk_clk_desc img_desc = {
@@ -35,12 +35,8 @@ static const struct mtk_clk_desc img_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6765_img[] = {
-	{
-		.compatible = "mediatek,mt6765-imgsys",
-		.data = &img_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6765-imgsys", .data = &img_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6765_img);
 

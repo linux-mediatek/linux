@@ -32,24 +32,24 @@ static const struct mtk_gate_regs audio1_cg_regs = {
 
 static const struct mtk_gate audio_clks[] = {
 	/* AUDIO0 */
-	GATE_AUDIO0(CLK_AUDIO_AFE, "aud_afe", "audio_ck", 2),
-	GATE_AUDIO0(CLK_AUDIO_22M, "aud_22m", "aud_engen1_ck", 8),
+	GATE_AUDIO0(CLK_AUDIO_AFE, "aud_afe", "audio_sel", 2),
+	GATE_AUDIO0(CLK_AUDIO_22M, "aud_22m", "aud_engen1_sel", 8),
 	GATE_AUDIO0(CLK_AUDIO_APLL_TUNER, "aud_apll_tuner",
-		    "aud_engen1_ck", 19),
-	GATE_AUDIO0(CLK_AUDIO_ADC, "aud_adc", "audio_ck", 24),
-	GATE_AUDIO0(CLK_AUDIO_DAC, "aud_dac", "audio_ck", 25),
+		    "aud_engen1_sel", 19),
+	GATE_AUDIO0(CLK_AUDIO_ADC, "aud_adc", "audio_sel", 24),
+	GATE_AUDIO0(CLK_AUDIO_DAC, "aud_dac", "audio_sel", 25),
 	GATE_AUDIO0(CLK_AUDIO_DAC_PREDIS, "aud_dac_predis",
-		    "audio_ck", 26),
-	GATE_AUDIO0(CLK_AUDIO_TML, "aud_tml", "audio_ck", 27),
+		    "audio_sel", 26),
+	GATE_AUDIO0(CLK_AUDIO_TML, "aud_tml", "audio_sel", 27),
 	/* AUDIO1 */
 	GATE_AUDIO1(CLK_AUDIO_I2S1_BCLK, "aud_i2s1_bclk",
-		    "audio_ck", 4),
+		    "audio_sel", 4),
 	GATE_AUDIO1(CLK_AUDIO_I2S2_BCLK, "aud_i2s2_bclk",
-		    "audio_ck", 5),
+		    "audio_sel", 5),
 	GATE_AUDIO1(CLK_AUDIO_I2S3_BCLK, "aud_i2s3_bclk",
-		    "audio_ck", 6),
+		    "audio_sel", 6),
 	GATE_AUDIO1(CLK_AUDIO_I2S4_BCLK, "aud_i2s4_bclk",
-		    "audio_ck", 7),
+		    "audio_sel", 7),
 };
 
 static const struct mtk_clk_desc audio_desc = {
@@ -58,12 +58,8 @@ static const struct mtk_clk_desc audio_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6765_audio[] = {
-	{
-		.compatible = "mediatek,mt6765-audsys",
-		.data = &audio_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6765-audsys", .data = &audio_desc }, 
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6765_audio);
 

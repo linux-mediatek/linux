@@ -22,10 +22,10 @@ static const struct mtk_gate_regs venc_cg_regs = {
 	GATE_MTK(_id, _name, _parent, &venc_cg_regs, _shift, &mtk_clk_gate_ops_setclr_inv)
 
 static const struct mtk_gate venc_clks[] = {
-	GATE_VENC(CLK_VENC_SET0_LARB, "venc_set0_larb", "mm_ck", 0),
-	GATE_VENC(CLK_VENC_SET1_VENC, "venc_set1_venc", "mm_ck", 4),
-	GATE_VENC(CLK_VENC_SET2_JPGENC, "jpgenc", "mm_ck", 8),
-	GATE_VENC(CLK_VENC_SET3_VDEC, "venc_set3_vdec", "mm_ck", 12),
+	GATE_VENC(CLK_VENC_SET0_LARB, "venc_set0_larb", "mm_sel", 0),
+	GATE_VENC(CLK_VENC_SET1_VENC, "venc_set1_venc", "mm_sel", 4),
+	GATE_VENC(CLK_VENC_SET2_JPGENC, "jpgenc", "mm_sel", 8),
+	GATE_VENC(CLK_VENC_SET3_VDEC, "venc_set3_vdec", "mm_sel", 12),
 };
 
 static const struct mtk_clk_desc venc_desc = {
@@ -34,12 +34,8 @@ static const struct mtk_clk_desc venc_desc = {
 };
 
 static const struct of_device_id of_match_clk_mt6765_vcodec[] = {
-	{
-		.compatible = "mediatek,mt6765-vcodecsys",
-		.data = &venc_desc,
-	}, {
-		/* sentinel */
-	}
+	{ .compatible = "mediatek,mt6765-vcodecsys", .data = &venc_desc },
+	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, of_match_clk_mt6765_vcodec);
 
